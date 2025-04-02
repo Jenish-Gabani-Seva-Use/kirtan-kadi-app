@@ -15,7 +15,7 @@ function App() {
   const [inputText, setInputText] = useState('');
   const [allLines, setAllLines] = useState([]);
   const [selectedLines, setSelectedLines] = useState([]);
-  const [currentDisplayedText, setCurrentDisplayedText] = useState('Final output will appear here. You can edit this text directly.');
+  const [currentDisplayedText, setCurrentDisplayedText] = useState('ÁÒ Ùä sÕâãÑÌâÓâÒÇ');
   const [selectedLineIndex, setSelectedLineIndex] = useState(-1);
   const [isInputPanelFocused, setIsInputPanelFocused] = useState(true);
   const [isDeleteMode, setIsDeleteMode] = useState(false);

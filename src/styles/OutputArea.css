@@ -36,3 +36,8 @@
     padding: 15px;
   }
 }
+
+.output-content[data-placeholder]:empty:before {
+  content: attr(data-placeholder);
+  color: #888;
+}
