@@ -1,0 +1,2403 @@
+ 
+Folder Structure of Z:\Kirtan Plate Code\Kirtan Plate Code In React\kirtan-kadi-react\src 
+ 
+Folder PATH listing for volume SSD
+Volume serial number is 8CA3-CA08
+Z:\KIRTAN PLATE CODE\KIRTAN PLATE CODE IN REACT\KIRTAN-KADI-REACT\SRC
+|   All File Code In One Folder.bat
+|   App.js
+|   App.test.js
+|   Extra Notes
+|   FolderStructure.bat
+|   FolderStructure.txt
+|   FolderStructureWithContent.txt
+|   index.css
+|   index.js
+|   logo.svg
+|   reportWebVitals.js
+|   setupTests.js
+|   utils.js
+|   
++---components
+|       Header.jsx
+|       InputModal.jsx
+|       LinesPanel.jsx
+|       OutputArea.jsx
+|       SelectedLinesPanel.jsx
+|       SettingModal.jsx
+|       VmixModal.jsx
+|       
++---New folder
+|       App.test.js
+|       index.css
+|       logo.svg
+|       reportWebVitals.js
+|       setupTests.js
+|       
+\---styles
+        App.css
+        Header.css
+        InputModal.css
+        LinesPanel.css
+        OutputArea.css
+        SelectedLinesPanel.css
+        SettingModal.css
+        VmixModal.css
+        
+ 
+================================================== 
+ 
+------------------------ 
+Above is All File Code In One Folder.bat file code 
+------------------------ 
+@echo off
+setlocal enabledelayedexpansion
+
+set "TARGET_DIR=%CD%"
+set "OUTPUT_FILE=%CD%\FolderStructureWithContent.txt"
+
+echo Generating folder structure and file contents...
+
+:: Create or clear the output file
+echo. > "%OUTPUT_FILE%"
+
+:: Run tree command and save output to text file
+echo Folder Structure of %TARGET_DIR% >> "%OUTPUT_FILE%"
+echo. >> "%OUTPUT_FILE%"
+tree "%TARGET_DIR%" /F /A >> "%OUTPUT_FILE%"
+echo. >> "%OUTPUT_FILE%"
+echo ================================================== >> "%OUTPUT_FILE%"
+echo. >> "%OUTPUT_FILE%"
+
+:: Loop through all files and append content
+for /r "%TARGET_DIR%" %%F in (*) do (
+    echo Processing: %%F
+    echo ------------------------ >> "%OUTPUT_FILE%"
+    echo Above is %%~nxF file code >> "%OUTPUT_FILE%"
+    echo ------------------------ >> "%OUTPUT_FILE%"
+    type "%%F" >> "%OUTPUT_FILE%"
+    echo. >> "%OUTPUT_FILE%"
+    echo ================================================== >> "%OUTPUT_FILE%"
+    echo. >> "%OUTPUT_FILE%"
+)
+
+:: Open the output file automatically
+start "" "%OUTPUT_FILE%"
+
+echo Folder structure with file contents saved to %OUTPUT_FILE%
+pause
+ 
+================================================== 
+ 
+------------------------ 
+Above is App.js file code 
+------------------------ 
+import React, { useState, useEffect, useCallback } from 'react';
+import Header from './components/Header';
+import LinesPanel from './components/LinesPanel';
+import SelectedLinesPanel from './components/SelectedLinesPanel';
+import OutputArea from './components/OutputArea';
+import InputModal from './components/InputModal';
+import SettingsModal from './components/SettingModal';
+import VmixModal from './components/VmixModal';
+import './styles/App.css';
+
+function App() {
+  const [inputModalOpen, setInputModalOpen] = useState(false);
+  const [settingsModalOpen, setSettingsModalOpen] = useState(false);
+  const [vmixModalOpen, setVmixModalOpen] = useState(false);
+  const [inputText, setInputText] = useState('');
+  const [allLines, setAllLines] = useState([]);
+  const [selectedLines, setSelectedLines] = useState([]);
+  const [currentDisplayedText, setCurrentDisplayedText] = useState('Final output will appear here. You can edit this text directly.');
+  const [selectedLineIndex, setSelectedLineIndex] = useState(-1);
+  const [isInputPanelFocused, setIsInputPanelFocused] = useState(true);
+  const [isDeleteMode, setIsDeleteMode] = useState(false);
+  const [linesToDelete, setLinesToDelete] = useState([]);
+  const [overlayActive, setOverlayActive] = useState(false);
+
+  // Load saved settings on initial mount
+  const [vmixSettings, setVmixSettings] = useState(() => {
+    const savedSettings = localStorage.getItem('vmixSettings');
+    return savedSettings ? JSON.parse(savedSettings) : {
+      inputNumber: 1,
+      overlayNumber: 1,
+      ipAddress: '192.168.1.3', // Default to your actual IP
+      port: 8088
+    };
+  });
+
+  const [editorSettings, setEditorSettings] = useState(() => {
+    const savedSettings = localStorage.getItem('editorSettings');
+    return savedSettings ? JSON.parse(savedSettings) : {
+      fontSize: '60px',
+      textColor: '#000000',
+      bgColor: '#f2cfa6',
+      fontFamily: "'Guj_Regular_Bold_Sulekh', sans-serif",
+      isBold: false,
+      isItalic: false,
+      isUnderline: false,
+      textAlign: 'center'
+    };
+  });
+
+  // Keyboard handler
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      // Spacebar handling
+      if (e.key === ' ') {
+        // Only trigger if not in input field
+        if (!['INPUT', 'TEXTAREA'].includes(e.target.tagName) && !e.target.isContentEditable) {
+          e.preventDefault();
+          e.stopPropagation();
+          triggerVmixOverlay();
+        }
+        return;
+      }
+
+      // Arrow keys navigation
+      if (allLines.length > 0 && isInputPanelFocused) {
+        if (e.key === 'ArrowUp') {
+          e.preventDefault();
+          if (selectedLineIndex > 0) {
+            selectLine(selectedLineIndex - 1);
+          }
+        } else if (e.key === 'ArrowDown') {
+          e.preventDefault();
+          const newIndex = selectedLineIndex >= allLines.length - 1 ? 0 : selectedLineIndex + 1;
+          selectLine(newIndex);
+        }
+      }
+
+      // Number keys selection
+      if (e.key >= '1' && e.key <= '9' && selectedLines.length > 0) {
+        e.preventDefault();
+        const num = parseInt(e.key);
+        if (num <= selectedLines.length) {
+          setCurrentDisplayedText(selectedLines[num - 1]);
+          scrollToLine(num - 1, true);
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [allLines, selectedLines, selectedLineIndex, isInputPanelFocused]);
+
+  const processText = (text) => {
+    const lines = text.split('\n').filter(line => line.trim() !== '');
+    setAllLines(lines);
+    if (lines.length > 0) {
+      setSelectedLineIndex(0);
+      setCurrentDisplayedText(lines[0]);
+    }
+  };
+
+  const selectLine = useCallback((index) => {
+    setSelectedLineIndex(index);
+    setCurrentDisplayedText(allLines[index]);
+    scrollToLine(index);
+  }, [allLines]);
+
+  const triggerVmixOverlay = async () => {
+    if (!vmixSettings.ipAddress || vmixSettings.ipAddress === '127.0.0.1') {
+      console.error('vMix IP not configured');
+      return;
+    }
+
+    setOverlayActive(true);
+    try {
+      const { ipAddress, port, inputNumber, overlayNumber } = vmixSettings;
+      
+      // Force overlay off first to ensure clean state
+      await fetch(
+        `http://${ipAddress}:${port}/api/?Function=OverlayInput${overlayNumber}Out&Input=${inputNumber}`
+      ).catch(() => {}); // Ignore errors for initial off
+
+      // Turn overlay on
+      const onResponse = await fetch(
+        `http://${ipAddress}:${port}/api/?Function=OverlayInput${overlayNumber}In&Input=${inputNumber}`
+      );
+      if (!onResponse.ok) throw new Error('Failed to activate overlay');
+
+      // Auto turn off after 3 seconds
+      setTimeout(async () => {
+        try {
+          await fetch(
+            `http://${ipAddress}:${port}/api/?Function=OverlayInput${overlayNumber}Out&Input=${inputNumber}`
+          );
+        } finally {
+          setOverlayActive(false);
+        }
+      }, 3000);
+
+    } catch (error) {
+      console.error('Overlay error:', error);
+      setOverlayActive(false);
+    }
+  };
+
+  // Rest of your existing functions (addToSelectedLines, removeSelectedLine, etc.)
+  const addToSelectedLines = (line) => {
+    if (!selectedLines.includes(line)) {
+      setSelectedLines([...selectedLines, line]);
+    }
+    setIsInputPanelFocused(false);
+  };
+
+  const removeSelectedLine = (index) => {
+    const newSelectedLines = [...selectedLines];
+    newSelectedLines.splice(index, 1);
+    setSelectedLines(newSelectedLines);
+    if (newSelectedLines.length === 0 && allLines.length > 0) {
+      setIsInputPanelFocused(true);
+    }
+  };
+
+  const updateEditorSettings = (newSettings) => {
+    const updatedSettings = { ...editorSettings, ...newSettings };
+    setEditorSettings(updatedSettings);
+    localStorage.setItem('editorSettings', JSON.stringify(updatedSettings));
+  };
+
+  const saveVmixSettings = (settings) => {
+    const validatedSettings = {
+      ...settings,
+      inputNumber: parseInt(settings.inputNumber) || 1,
+      overlayNumber: Math.min(4, Math.max(1, parseInt(settings.overlayNumber) || 1)),
+      port: parseInt(settings.port) || 8088
+    };
+    setVmixSettings(validatedSettings);
+    localStorage.setItem('vmixSettings', JSON.stringify(validatedSettings));
+    setVmixModalOpen(false);
+  };
+
+  // Rest of your existing functions (toggleDeleteMode, etc.)
+  const toggleDeleteMode = () => {
+    setIsDeleteMode(!isDeleteMode);
+    if (!isDeleteMode) {
+      setLinesToDelete([]);
+    }
+  };
+
+  const toggleLineForDeletion = (index) => {
+    if (linesToDelete.includes(index)) {
+      setLinesToDelete(linesToDelete.filter(i => i !== index));
+    } else {
+      setLinesToDelete([...linesToDelete, index]);
+    }
+  };
+
+  const deleteSelectedLines = () => {
+    const newAllLines = allLines.filter((_, index) => !linesToDelete.includes(index));
+    setAllLines(newAllLines);
+    setIsDeleteMode(false);
+    setLinesToDelete([]);
+    if (newAllLines.length > 0) {
+      setSelectedLineIndex(0);
+      setCurrentDisplayedText(newAllLines[0]);
+    } else {
+      setSelectedLineIndex(-1);
+      setCurrentDisplayedText('');
+    }
+  };
+
+  return (
+    <div className="app">
+      <Header
+        onOpenInputModal={() => setInputModalOpen(true)}
+        onOpenSettingsModal={() => setSettingsModalOpen(true)}
+        onOpenVmixModal={() => setVmixModalOpen(true)}
+      />
+
+      <div className="main-container">
+        <LinesPanel
+          allLines={allLines}
+          selectedLineIndex={selectedLineIndex}
+          isDeleteMode={isDeleteMode}
+          linesToDelete={linesToDelete}
+          onSelectLine={selectLine}
+          onAddToSelectedLines={addToSelectedLines}
+          onToggleDeleteMode={toggleDeleteMode}
+          onToggleLineForDeletion={toggleLineForDeletion}
+          onDeleteSelectedLines={deleteSelectedLines}
+          setIsInputPanelFocused={setIsInputPanelFocused}
+        />
+
+        <SelectedLinesPanel
+          selectedLines={selectedLines}
+          onRemoveLine={removeSelectedLine}
+          onDisplayLine={setCurrentDisplayedText}
+          currentDisplayedText={currentDisplayedText}
+        />
+      </div>
+
+      <OutputArea
+        content={currentDisplayedText}
+        onContentChange={setCurrentDisplayedText}
+        editorSettings={editorSettings}
+        overlayActive={overlayActive}
+      />
+
+      <InputModal
+        isOpen={inputModalOpen}
+        onClose={() => setInputModalOpen(false)}
+        onProcessText={processText}
+      />
+
+      <SettingsModal
+        isOpen={settingsModalOpen}
+        onClose={() => setSettingsModalOpen(false)}
+        editorSettings={editorSettings}
+        onUpdateEditorSettings={updateEditorSettings}
+      />
+
+      <VmixModal
+        isOpen={vmixModalOpen}
+        onClose={() => setVmixModalOpen(false)}
+        onSave={saveVmixSettings}
+        settings={vmixSettings}
+      />
+    </div>
+  );
+}
+
+const scrollToLine = (index, isShortcutKadi = false) => {
+  setTimeout(() => {
+    const selector = isShortcutKadi 
+      ? `.selected-line:nth-child(${index + 1})` 
+      : `.line-item:nth-child(${index + 2})`;
+    const element = document.querySelector(selector);
+    if (element) {
+      element.scrollIntoView({
+        behavior: 'smooth',
+        block: 'nearest'
+      });
+    }
+  }, 50);
+};
+
+export default App; 
+================================================== 
+ 
+------------------------ 
+Above is App.test.js file code 
+------------------------ 
+import { render, screen } from '@testing-library/react';
+import App from './App';
+
+test('renders learn react link', () => {
+  render(<App />);
+  const linkElement = screen.getByText(/learn react/i);
+  expect(linkElement).toBeInTheDocument();
+});
+ 
+================================================== 
+ 
+------------------------ 
+Above is Extra Notes file code 
+------------------------ 
+ 
+================================================== 
+ 
+------------------------ 
+Above is FolderStructure.bat file code 
+------------------------ 
+@echo off
+set "TARGET_DIR=%CD%"
+set "OUTPUT_FILE=%CD%\FolderStructure.txt"
+
+echo Generating folder structure...
+
+:: Run tree command and save output to text file
+tree "%TARGET_DIR%" /F /A > "%OUTPUT_FILE%"
+
+echo Folder structure saved to %OUTPUT_FILE%
+
+:: Open the output file automatically
+start "" "%OUTPUT_FILE%"
+
+pause
+ 
+================================================== 
+ 
+------------------------ 
+Above is FolderStructure.txt file code 
+------------------------ 
+Folder PATH listing for volume SSD
+Volume serial number is 8CA3-CA08
+Z:\KIRTAN PLATE CODE\KIRTAN PLATE CODE IN REACT\KIRTAN-KADI-REACT\SRC
+|   App.js
+|   FolderStructure.bat
+|   FolderStructure.txt
+|   index.js
+|   utils.js
+|   
++---components
+|       Header.jsx
+|       InputModal.jsx
+|       LinesPanel.jsx
+|       OutputArea.jsx
+|       SelectedLinesPanel.jsx
+|       SettingModal.jsx
+|       VmixModal.jsx
+|       
++---New folder
+|       App.test.js
+|       index.css
+|       logo.svg
+|       reportWebVitals.js
+|       setupTests.js
+|       
+\---styles
+        App.css
+        Header.css
+        InputModal.css
+        LinesPanel.css
+        OutputArea.css
+        SelectedLinesPanel.css
+        SettingModal.css
+        VmixModal.css
+        
+ 
+================================================== 
+ 
+------------------------ 
+Above is FolderStructureWithContent.txt file code 
+------------------------ 
+ 
+Folder Structure of Z:\Kirtan Plate Code\Kirtan Plate Code In React\kirtan-kadi-react\src 
+ 
+Folder PATH listing for volume SSD
+Volume serial number is 8CA3-CA08
+Z:\KIRTAN PLATE CODE\KIRTAN PLATE CODE IN REACT\KIRTAN-KADI-REACT\SRC
+|   All File Code In One Folder.bat
+|   App.js
+|   App.test.js
+|   Extra Notes
+|   FolderStructure.bat
+|   FolderStructure.txt
+|   FolderStructureWithContent.txt
+|   index.css
+|   index.js
+|   logo.svg
+|   reportWebVitals.js
+|   setupTests.js
+|   utils.js
+|   
++---components
+|       Header.jsx
+|       InputModal.jsx
+|       LinesPanel.jsx
+|       OutputArea.jsx
+|       SelectedLinesPanel.jsx
+|       SettingModal.jsx
+|       VmixModal.jsx
+|       
++---New folder
+|       App.test.js
+|       index.css
+|       logo.svg
+|       reportWebVitals.js
+|       setupTests.js
+|       
+\---styles
+        App.css
+        Header.css
+        InputModal.css
+        LinesPanel.css
+        OutputArea.css
+        SelectedLinesPanel.css
+        SettingModal.css
+        VmixModal.css
+        
+ 
+================================================== 
+ 
+------------------------ 
+Above is All File Code In One Folder.bat file code 
+------------------------ 
+@echo off
+setlocal enabledelayedexpansion
+
+set "TARGET_DIR=%CD%"
+set "OUTPUT_FILE=%CD%\FolderStructureWithContent.txt"
+
+echo Generating folder structure and file contents...
+
+:: Create or clear the output file
+echo. > "%OUTPUT_FILE%"
+
+:: Run tree command and save output to text file
+echo Folder Structure of %TARGET_DIR% >> "%OUTPUT_FILE%"
+echo. >> "%OUTPUT_FILE%"
+tree "%TARGET_DIR%" /F /A >> "%OUTPUT_FILE%"
+echo. >> "%OUTPUT_FILE%"
+echo ================================================== >> "%OUTPUT_FILE%"
+echo. >> "%OUTPUT_FILE%"
+
+:: Loop through all files and append content
+for /r "%TARGET_DIR%" %%F in (*) do (
+    echo Processing: %%F
+    echo ------------------------ >> "%OUTPUT_FILE%"
+    echo Above is %%~nxF file code >> "%OUTPUT_FILE%"
+    echo ------------------------ >> "%OUTPUT_FILE%"
+    type "%%F" >> "%OUTPUT_FILE%"
+    echo. >> "%OUTPUT_FILE%"
+    echo ================================================== >> "%OUTPUT_FILE%"
+    echo. >> "%OUTPUT_FILE%"
+)
+
+:: Open the output file automatically
+start "" "%OUTPUT_FILE%"
+
+echo Folder structure with file contents saved to %OUTPUT_FILE%
+pause
+ 
+================================================== 
+ 
+------------------------ 
+Above is App.js file code 
+------------------------ 
+import React, { useState, useEffect, useCallback } from 'react';
+import Header from './components/Header';
+import LinesPanel from './components/LinesPanel';
+import SelectedLinesPanel from './components/SelectedLinesPanel';
+import OutputArea from './components/OutputArea';
+import InputModal from './components/InputModal';
+import SettingsModal from './components/SettingModal';
+import VmixModal from './components/VmixModal';
+import './styles/App.css';
+
+function App() {
+  const [inputModalOpen, setInputModalOpen] = useState(false);
+  const [settingsModalOpen, setSettingsModalOpen] = useState(false);
+  const [vmixModalOpen, setVmixModalOpen] = useState(false);
+  const [inputText, setInputText] = useState('');
+  const [allLines, setAllLines] = useState([]);
+  const [selectedLines, setSelectedLines] = useState([]);
+  const [currentDisplayedText, setCurrentDisplayedText] = useState('Final output will appear here. You can edit this text directly.');
+  const [selectedLineIndex, setSelectedLineIndex] = useState(-1);
+  const [isInputPanelFocused, setIsInputPanelFocused] = useState(true);
+  const [isDeleteMode, setIsDeleteMode] = useState(false);
+  const [linesToDelete, setLinesToDelete] = useState([]);
+  const [overlayActive, setOverlayActive] = useState(false);
+
+  // Load saved settings on initial mount
+  const [vmixSettings, setVmixSettings] = useState(() => {
+    const savedSettings = localStorage.getItem('vmixSettings');
+    return savedSettings ? JSON.parse(savedSettings) : {
+      inputNumber: 1,
+      overlayNumber: 1,
+      ipAddress: '192.168.1.3', // Default to your actual IP
+      port: 8088
+    };
+  });
+
+  const [editorSettings, setEditorSettings] = useState(() => {
+    const savedSettings = localStorage.getItem('editorSettings');
+    return savedSettings ? JSON.parse(savedSettings) : {
+      fontSize: '60px',
+      textColor: '#000000',
+      bgColor: '#f2cfa6',
+      fontFamily: "'Guj_Regular_Bold_Sulekh', sans-serif",
+      isBold: false,
+      isItalic: false,
+      isUnderline: false,
+      textAlign: 'center'
+    };
+  });
+
+  // Keyboard handler
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      // Spacebar handling
+      if (e.key === ' ') {
+        // Only trigger if not in input field
+        if (!['INPUT', 'TEXTAREA'].includes(e.target.tagName) && !e.target.isContentEditable) {
+          e.preventDefault();
+          e.stopPropagation();
+          triggerVmixOverlay();
+        }
+        return;
+      }
+
+      // Arrow keys navigation
+      if (allLines.length > 0 && isInputPanelFocused) {
+        if (e.key === 'ArrowUp') {
+          e.preventDefault();
+          if (selectedLineIndex > 0) {
+            selectLine(selectedLineIndex - 1);
+          }
+        } else if (e.key === 'ArrowDown') {
+          e.preventDefault();
+          const newIndex = selectedLineIndex >= allLines.length - 1 ? 0 : selectedLineIndex + 1;
+          selectLine(newIndex);
+        }
+      }
+
+      // Number keys selection
+      if (e.key >= '1' && e.key <= '9' && selectedLines.length > 0) {
+        e.preventDefault();
+        const num = parseInt(e.key);
+        if (num <= selectedLines.length) {
+          setCurrentDisplayedText(selectedLines[num - 1]);
+          scrollToLine(num - 1, true);
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [allLines, selectedLines, selectedLineIndex, isInputPanelFocused]);
+
+  const processText = (text) => {
+    const lines = text.split('\n').filter(line => line.trim() !== '');
+    setAllLines(lines);
+    if (lines.length > 0) {
+      setSelectedLineIndex(0);
+      setCurrentDisplayedText(lines[0]);
+    }
+  };
+
+  const selectLine = useCallback((index) => {
+    setSelectedLineIndex(index);
+    setCurrentDisplayedText(allLines[index]);
+    scrollToLine(index);
+  }, [allLines]);
+
+  const triggerVmixOverlay = async () => {
+    if (!vmixSettings.ipAddress || vmixSettings.ipAddress === '127.0.0.1') {
+      console.error('vMix IP not configured');
+      return;
+    }
+
+    setOverlayActive(true);
+    try {
+      const { ipAddress, port, inputNumber, overlayNumber } = vmixSettings;
+      
+      // Force overlay off first to ensure clean state
+      await fetch(
+        `http://${ipAddress}:${port}/api/?Function=OverlayInput${overlayNumber}Out&Input=${inputNumber}`
+      ).catch(() => {}); // Ignore errors for initial off
+
+      // Turn overlay on
+      const onResponse = await fetch(
+        `http://${ipAddress}:${port}/api/?Function=OverlayInput${overlayNumber}In&Input=${inputNumber}`
+      );
+      if (!onResponse.ok) throw new Error('Failed to activate overlay');
+
+      // Auto turn off after 3 seconds
+      setTimeout(async () => {
+        try {
+          await fetch(
+            `http://${ipAddress}:${port}/api/?Function=OverlayInput${overlayNumber}Out&Input=${inputNumber}`
+          );
+        } finally {
+          setOverlayActive(false);
+        }
+      }, 3000);
+
+    } catch (error) {
+      console.error('Overlay error:', error);
+      setOverlayActive(false);
+    }
+  };
+
+  // Rest of your existing functions (addToSelectedLines, removeSelectedLine, etc.)
+  const addToSelectedLines = (line) => {
+    if (!selectedLines.includes(line)) {
+      setSelectedLines([...selectedLines, line]);
+    }
+    setIsInputPanelFocused(false);
+  };
+
+  const removeSelectedLine = (index) => {
+    const newSelectedLines = [...selectedLines];
+    newSelectedLines.splice(index, 1);
+    setSelectedLines(newSelectedLines);
+    if (newSelectedLines.length === 0 && allLines.length > 0) {
+      setIsInputPanelFocused(true);
+    }
+  };
+
+  const updateEditorSettings = (newSettings) => {
+    const updatedSettings = { ...editorSettings, ...newSettings };
+    setEditorSettings(updatedSettings);
+    localStorage.setItem('editorSettings', JSON.stringify(updatedSettings));
+  };
+
+  const saveVmixSettings = (settings) => {
+    const validatedSettings = {
+      ...settings,
+      inputNumber: parseInt(settings.inputNumber) || 1,
+      overlayNumber: Math.min(4, Math.max(1, parseInt(settings.overlayNumber) || 1)),
+      port: parseInt(settings.port) || 8088
+    };
+    setVmixSettings(validatedSettings);
+    localStorage.setItem('vmixSettings', JSON.stringify(validatedSettings));
+    setVmixModalOpen(false);
+  };
+
+  // Rest of your existing functions (toggleDeleteMode, etc.)
+  const toggleDeleteMode = () => {
+    setIsDeleteMode(!isDeleteMode);
+    if (!isDeleteMode) {
+      setLinesToDelete([]);
+    }
+  };
+
+  const toggleLineForDeletion = (index) => {
+    if (linesToDelete.includes(index)) {
+      setLinesToDelete(linesToDelete.filter(i => i !== index));
+    } else {
+      setLinesToDelete([...linesToDelete, index]);
+    }
+  };
+
+  const deleteSelectedLines = () => {
+    const newAllLines = allLines.filter((_, index) => !linesToDelete.includes(index));
+    setAllLines(newAllLines);
+    setIsDeleteMode(false);
+    setLinesToDelete([]);
+    if (newAllLines.length > 0) {
+      setSelectedLineIndex(0);
+      setCurrentDisplayedText(newAllLines[0]);
+    } else {
+      setSelectedLineIndex(-1);
+      setCurrentDisplayedText('');
+    }
+  };
+
+  return (
+    <div className="app">
+      <Header
+        onOpenInputModal={() => setInputModalOpen(true)}
+        onOpenSettingsModal={() => setSettingsModalOpen(true)}
+        onOpenVmixModal={() => setVmixModalOpen(true)}
+      />
+
+      <div className="main-container">
+        <LinesPanel
+          allLines={allLines}
+          selectedLineIndex={selectedLineIndex}
+          isDeleteMode={isDeleteMode}
+          linesToDelete={linesToDelete}
+          onSelectLine={selectLine}
+          onAddToSelectedLines={addToSelectedLines}
+          onToggleDeleteMode={toggleDeleteMode}
+          onToggleLineForDeletion={toggleLineForDeletion}
+          onDeleteSelectedLines={deleteSelectedLines}
+          setIsInputPanelFocused={setIsInputPanelFocused}
+        />
+
+        <SelectedLinesPanel
+          selectedLines={selectedLines}
+          onRemoveLine={removeSelectedLine}
+          onDisplayLine={setCurrentDisplayedText}
+          currentDisplayedText={currentDisplayedText}
+        />
+      </div>
+
+      <OutputArea
+        content={currentDisplayedText}
+        onContentChange={setCurrentDisplayedText}
+        editorSettings={editorSettings}
+        overlayActive={overlayActive}
+      />
+
+      <InputModal
+        isOpen={inputModalOpen}
+        onClose={() => setInputModalOpen(false)}
+        onProcessText={processText}
+      />
+
+      <SettingsModal
+        isOpen={settingsModalOpen}
+        onClose={() => setSettingsModalOpen(false)}
+        editorSettings={editorSettings}
+        onUpdateEditorSettings={updateEditorSettings}
+      />
+
+      <VmixModal
+        isOpen={vmixModalOpen}
+        onClose={() => setVmixModalOpen(false)}
+        onSave={saveVmixSettings}
+        settings={vmixSettings}
+      />
+    </div>
+  );
+}
+
+const scrollToLine = (index, isShortcutKadi = false) => {
+  setTimeout(() => {
+    const selector = isShortcutKadi 
+      ? `.selected-line:nth-child(${index + 1})` 
+      : `.line-item:nth-child(${index + 2})`;
+    const element = document.querySelector(selector);
+    if (element) {
+      element.scrollIntoView({
+        behavior: 'smooth',
+        block: 'nearest'
+      });
+    }
+  }, 50);
+};
+
+export default App; 
+================================================== 
+ 
+------------------------ 
+Above is App.test.js file code 
+------------------------ 
+import { render, screen } from '@testing-library/react';
+import App from './App';
+
+test('renders learn react link', () => {
+  render(<App />);
+  const linkElement = screen.getByText(/learn react/i);
+  expect(linkElement).toBeInTheDocument();
+});
+ 
+================================================== 
+ 
+------------------------ 
+Above is Extra Notes file code 
+------------------------ 
+ 
+================================================== 
+ 
+------------------------ 
+Above is FolderStructure.bat file code 
+------------------------ 
+@echo off
+set "TARGET_DIR=%CD%"
+set "OUTPUT_FILE=%CD%\FolderStructure.txt"
+
+echo Generating folder structure...
+
+:: Run tree command and save output to text file
+tree "%TARGET_DIR%" /F /A > "%OUTPUT_FILE%"
+
+echo Folder structure saved to %OUTPUT_FILE%
+
+:: Open the output file automatically
+start "" "%OUTPUT_FILE%"
+
+pause
+ 
+================================================== 
+ 
+------------------------ 
+Above is FolderStructure.txt file code 
+------------------------ 
+Folder PATH listing for volume SSD
+Volume serial number is 8CA3-CA08
+Z:\KIRTAN PLATE CODE\KIRTAN PLATE CODE IN REACT\KIRTAN-KADI-REACT\SRC
+|   App.js
+|   FolderStructure.bat
+|   FolderStructure.txt
+|   index.js
+|   utils.js
+|   
++---components
+|       Header.jsx
+|       InputModal.jsx
+|       LinesPanel.jsx
+|       OutputArea.jsx
+|       SelectedLinesPanel.jsx
+|       SettingModal.jsx
+|       VmixModal.jsx
+|       
++---New folder
+|       App.test.js
+|       index.css
+|       logo.svg
+|       reportWebVitals.js
+|       setupTests.js
+|       
+\---styles
+        App.css
+        Header.css
+        InputModal.css
+        LinesPanel.css
+        OutputArea.css
+        SelectedLinesPanel.css
+        SettingModal.css
+        VmixModal.css
+        
+ 
+================================================== 
+ 
+------------------------ 
+Above is FolderStructureWithContent.txt file code 
+------------------------ 
+ 
+Folder Structure of Z:\Kirtan Plate Code\Kirtan Plate Code In React\kirtan-kadi-react\src 
+ 
+Folder PATH listing for volume SSD
+Volume serial number is 8CA3-CA08
+Z:\KIRTAN PLATE CODE\KIRTAN PLATE CODE IN REACT\KIRTAN-KADI-REACT\SRC
+|   All File Code In One Folder.bat
+|   App.js
+|   App.test.js
+|   Extra Notes
+|   FolderStructure.bat
+|   Fol 
+================================================== 
+ 
+------------------------ 
+Above is index.css file code 
+------------------------ 
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+ 
+================================================== 
+ 
+------------------------ 
+Above is index.js file code 
+------------------------ 
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import './index.css';
+import App from './App';
+import reportWebVitals from './reportWebVitals';
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>
+);
+
+// If you want to start measuring performance in your app, pass a function
+// to log results (for example: reportWebVitals(console.log))
+// or send to an analytics endpoint. Learn more: https://bit.ly/CRA-vitals
+reportWebVitals();
+ 
+================================================== 
+ 
+------------------------ 
+Above is logo.svg file code 
+------------------------ 
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 841.9 595.3"><g fill="#61DAFB"><path d="M666.3 296.5c0-32.5-40.7-63.3-103.1-82.4 14.4-63.6 8-114.2-20.2-130.4-6.5-3.8-14.1-5.6-22.4-5.6v22.3c4.6 0 8.3.9 11.4 2.6 13.6 7.8 19.5 37.5 14.9 75.7-1.1 9.4-2.9 19.3-5.1 29.4-19.6-4.8-41-8.5-63.5-10.9-13.5-18.5-27.5-35.3-41.6-50 32.6-30.3 63.2-46.9 84-46.9V78c-27.5 0-63.5 19.6-99.9 53.6-36.4-33.8-72.4-53.2-99.9-53.2v22.3c20.7 0 51.4 16.5 84 46.6-14 14.7-28 31.4-41.3 49.9-22.6 2.4-44 6.1-63.6 11-2.3-10-4-19.7-5.2-29-4.7-38.2 1.1-67.9 14.6-75.8 3-1.8 6.9-2.6 11.5-2.6V78.5c-8.4 0-16 1.8-22.6 5.6-28.1 16.2-34.4 66.7-19.9 130.1-62.2 19.2-102.7 49.9-102.7 82.3 0 32.5 40.7 63.3 103.1 82.4-14.4 63.6-8 114.2 20.2 130.4 6.5 3.8 14.1 5.6 22.5 5.6 27.5 0 63.5-19.6 99.9-53.6 36.4 33.8 72.4 53.2 99.9 53.2 8.4 0 16-1.8 22.6-5.6 28.1-16.2 34.4-66.7 19.9-130.1 62-19.1 102.5-49.9 102.5-82.3zm-130.2-66.7c-3.7 12.9-8.3 26.2-13.5 39.5-4.1-8-8.4-16-13.1-24-4.6-8-9.5-15.8-14.4-23.4 14.2 2.1 27.9 4.7 41 7.9zm-45.8 106.5c-7.8 13.5-15.8 26.3-24.1 38.2-14.9 1.3-30 2-45.2 2-15.1 0-30.2-.7-45-1.9-8.3-11.9-16.4-24.6-24.2-38-7.6-13.1-14.5-26.4-20.8-39.8 6.2-13.4 13.2-26.8 20.7-39.9 7.8-13.5 15.8-26.3 24.1-38.2 14.9-1.3 30-2 45.2-2 15.1 0 30.2.7 45 1.9 8.3 11.9 16.4 24.6 24.2 38 7.6 13.1 14.5 26.4 20.8 39.8-6.3 13.4-13.2 26.8-20.7 39.9zm32.3-13c5.4 13.4 10 26.8 13.8 39.8-13.1 3.2-26.9 5.9-41.2 8 4.9-7.7 9.8-15.6 14.4-23.7 4.6-8 8.9-16.1 13-24.1zM421.2 430c-9.3-9.6-18.6-20.3-27.8-32 9 .4 18.2.7 27.5.7 9.4 0 18.7-.2 27.8-.7-9 11.7-18.3 22.4-27.5 32zm-74.4-58.9c-14.2-2.1-27.9-4.7-41-7.9 3.7-12.9 8.3-26.2 13.5-39.5 4.1 8 8.4 16 13.1 24 4.7 8 9.5 15.8 14.4 23.4zM420.7 163c9.3 9.6 18.6 20.3 27.8 32-9-.4-18.2-.7-27.5-.7-9.4 0-18.7.2-27.8.7 9-11.7 18.3-22.4 27.5-32zm-74 58.9c-4.9 7.7-9.8 15.6-14.4 23.7-4.6 8-8.9 16-13 24-5.4-13.4-10-26.8-13.8-39.8 13.1-3.1 26.9-5.8 41.2-7.9zm-90.5 125.2c-35.4-15.1-58.3-34.9-58.3-50.6 0-15.7 22.9-35.6 58.3-50.6 8.6-3.7 18-7 27.7-10.1 5.7 19.6 13.2 40 22.5 60.9-9.2 20.8-16.6 41.1-22.2 60.6-9.9-3.1-19.3-6.5-28-10.2zM310 490c-13.6-7.8-19.5-37.5-14.9-75.7 1.1-9.4 2.9-19.3 5.1-29.4 19.6 4.8 41 8.5 63.5 10.9 13.5 18.5 27.5 35.3 41.6 50-32.6 30.3-63.2 46.9-84 46.9-4.5-.1-8.3-1-11.3-2.7zm237.2-76.2c4.7 38.2-1.1 67.9-14.6 75.8-3 1.8-6.9 2.6-11.5 2.6-20.7 0-51.4-16.5-84-46.6 14-14.7 28-31.4 41.3-49.9 22.6-2.4 44-6.1 63.6-11 2.3 10.1 4.1 19.8 5.2 29.1zm38.5-66.7c-8.6 3.7-18 7-27.7 10.1-5.7-19.6-13.2-40-22.5-60.9 9.2-20.8 16.6-41.1 22.2-60.6 9.9 3.1 19.3 6.5 28.1 10.2 35.4 15.1 58.3 34.9 58.3 50.6-.1 15.7-23 35.6-58.4 50.6zM320.8 78.4z"/><circle cx="420.9" cy="296.5" r="45.7"/><path d="M520.5 78.1z"/></g></svg> 
+================================================== 
+ 
+------------------------ 
+Above is reportWebVitals.js file code 
+------------------------ 
+const reportWebVitals = onPerfEntry => {
+  if (onPerfEntry && onPerfEntry instanceof Function) {
+    import('web-vitals').then(({ getCLS, getFID, getFCP, getLCP, getTTFB }) => {
+      getCLS(onPerfEntry);
+      getFID(onPerfEntry);
+      getFCP(onPerfEntry);
+      getLCP(onPerfEntry);
+      getTTFB(onPerfEntry);
+    });
+  }
+};
+
+export default reportWebVitals;
+ 
+================================================== 
+ 
+------------------------ 
+Above is setupTests.js file code 
+------------------------ 
+// jest-dom adds custom jest matchers for asserting on DOM nodes.
+// allows you to do things like:
+// expect(element).toHaveTextContent(/react/i)
+// learn more: https://github.com/testing-library/jest-dom
+import '@testing-library/jest-dom';
+ 
+================================================== 
+ 
+------------------------ 
+Above is utils.js file code 
+------------------------ 
+ 
+================================================== 
+ 
+------------------------ 
+Above is Header.jsx file code 
+------------------------ 
+import React from 'react';
+import { FaCog, FaVideo, FaPencilAlt } from 'react-icons/fa';
+import '../styles/Header.css';
+
+const Header = ({ onOpenInputModal, onOpenSettingsModal, onOpenVmixModal }) => {
+  return (
+    <header>
+      <div className="logo">Kirtan Kadi App</div>
+      <div className="header-icons">
+        <div className="pencil-icon" onClick={onOpenInputModal} title="Add new text">✏️</div>
+        <div className="settings-icon" onClick={onOpenSettingsModal} title="Output settings">
+          <FaCog />
+        </div>
+        <div className="vmix-icon" onClick={onOpenVmixModal} title="VMix Settings">
+          <FaVideo />
+        </div>
+      </div>
+    </header>
+  );
+};
+
+export default Header; 
+================================================== 
+ 
+------------------------ 
+Above is InputModal.jsx file code 
+------------------------ 
+import React, { useState } from 'react';
+import '../styles/InputModal.css';
+
+const InputModal = ({ isOpen, onClose, onProcessText }) => {
+  const [text, setText] = useState('');
+
+  const handleProcess = () => {
+    if (text.trim()) {
+      onProcessText(text);
+      setText('');
+      onClose();
+    }
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="modal">
+      <div className="modal-content">
+        <h2>Enter Your Text</h2>
+        <textarea
+          className="modal-textarea"
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          placeholder="Paste your entire text here..."
+        />
+        <div className="modal-actions">
+          <button className="btn btn-secondary" onClick={onClose}>Cancel</button>
+          <button className="btn btn-primary" onClick={handleProcess}>Process Text</button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default InputModal; 
+================================================== 
+ 
+------------------------ 
+Above is LinesPanel.jsx file code 
+------------------------ 
+import React, { useEffect } from 'react';
+import '../styles/LinesPanel.css';
+
+const LinesPanel = ({
+  allLines,
+  selectedLineIndex,
+  isDeleteMode,
+  linesToDelete,
+  onSelectLine,
+  onAddToSelectedLines,
+  onToggleDeleteMode,
+  onToggleLineForDeletion,
+  onDeleteSelectedLines,
+  setIsInputPanelFocused
+}) => {
+  // Auto-focus the panel when lines change
+  useEffect(() => {
+    const panel = document.querySelector('.lines-content');
+    if (panel && allLines.length > 0) {
+      panel.focus();
+      setIsInputPanelFocused(true);
+    }
+  }, [allLines, setIsInputPanelFocused]);
+
+  // Enhanced scroll behavior with fixed header
+  useEffect(() => {
+    if (selectedLineIndex >= 0 && allLines.length > 0) {
+      const container = document.querySelector('.lines-content');
+      const element = document.querySelector(`.line-item[data-index="${selectedLineIndex}"]`);
+      
+      if (element && container) {
+        const containerHeight = container.clientHeight;
+        const elementTop = element.offsetTop;
+        const elementHeight = element.clientHeight;
+        
+        // Calculate scroll position to show context
+        const scrollToPosition = elementTop - (containerHeight / 3) + (elementHeight / 2);
+        
+        container.scrollTo({
+          top: scrollToPosition,
+          behavior: 'smooth'
+        });
+      }
+    }
+  }, [selectedLineIndex, allLines]);
+
+  return (
+    <div className="lines-panel">
+      {/* Fixed Header */}
+      <div className="panel-header">
+        <span>Text Inputs</span>
+        <div className="panel-header-actions">
+          <div 
+            className={`delete-icon ${isDeleteMode ? 'active' : ''}`} 
+            onClick={(e) => {
+              e.stopPropagation();
+              onToggleDeleteMode();
+            }}
+            title={isDeleteMode ? 'Exit delete mode' : 'Delete selected lines'}
+          >
+            {isDeleteMode ? '✕' : '🗑️'}
+          </div>
+        </div>
+      </div>
+      
+      {/* Scrollable Content */}
+      <div 
+        className="lines-content"
+        tabIndex="0"
+        onClick={() => setIsInputPanelFocused(true)}
+      >
+        {allLines.length === 0 ? (
+          <p className="panel-placeholder">Process text to see lines here</p>
+        ) : (
+          allLines.map((line, index) => (
+            <div
+              key={index}
+              data-index={index}
+              className={`line-item ${selectedLineIndex === index ? 'selected' : ''}`}
+              onClick={() => !isDeleteMode && onSelectLine(index)}
+            >
+              {isDeleteMode && (
+                <input
+                  type="checkbox"
+                  className="line-checkbox"
+                  checked={linesToDelete.includes(index)}
+                  onChange={(e) => {
+                    e.stopPropagation();
+                    onToggleLineForDeletion(index);
+                  }}
+                />
+              )}
+              <span className="line-index">{index + 1}.</span>
+              <div className="line-text">{line}</div>
+              {!isDeleteMode && (
+                <div 
+                  className="add-btn"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onAddToSelectedLines(line);
+                    setIsInputPanelFocused(false);
+                  }}
+                >
+                  +
+                </div>
+              )}
+            </div>
+          ))
+        )}
+        
+        {isDeleteMode && linesToDelete.length > 0 && (
+          <div className="delete-confirm">
+            <button 
+              className="btn btn-primary"
+              onClick={(e) => {
+                e.stopPropagation();
+                onDeleteSelectedLines();
+              }}
+            >
+              Delete Selected ({linesToDelete.length})
+            </button>
+          </div>
+        )}
+
+       
+      </div>
+    </div>
+  );
+};
+
+export default LinesPanel; 
+================================================== 
+ 
+------------------------ 
+Above is OutputArea.jsx file code 
+------------------------ 
+import React from 'react';
+import '../styles/OutputArea.css';
+
+const OutputArea = ({ content, onContentChange, editorSettings, overlayActive }) => {
+    const outputStyle = {
+    fontSize: editorSettings.fontSize || '60px',
+    color: editorSettings.textColor || '#000000',
+    backgroundColor: editorSettings.bgColor || '#f2cfa6',
+    fontFamily: editorSettings.fontFamily,
+    fontWeight: editorSettings.isBold ? 'bold' : 'normal',
+    fontStyle: editorSettings.isItalic ? 'italic' : 'normal',
+    textDecoration: editorSettings.isUnderline ? 'underline' : 'none',
+    textAlign: editorSettings.textAlign
+  };
+
+  return (
+    <div className={`output-area ${overlayActive ? 'overlay-active' : ''}`}>
+      <div 
+        className="output-content"
+        contentEditable
+        style={outputStyle}
+        dangerouslySetInnerHTML={{ __html: content }}
+        onInput={(e) => onContentChange(e.target.innerHTML)}
+      />
+    </div>
+  );
+};
+
+export default OutputArea; 
+================================================== 
+ 
+------------------------ 
+Above is SelectedLinesPanel.jsx file code 
+------------------------ 
+import React, { useEffect } from 'react';
+import '../styles/SelectedLinesPanel.css';
+
+const SelectedLinesPanel = ({ 
+  selectedLines, 
+  onRemoveLine, 
+  onDisplayLine,
+  currentDisplayedText
+}) => {
+  // Auto-scroll when selection changes
+  useEffect(() => {
+    if (selectedLines.length > 0 && currentDisplayedText) {
+      const index = selectedLines.findIndex(line => line === currentDisplayedText);
+      if (index >= 0) {
+        const container = document.querySelector('.selected-lines-content');
+        const element = document.querySelector(`.selected-line[data-index="${index}"]`);
+        
+        if (element && container) {
+          const containerHeight = container.clientHeight;
+          const elementTop = element.offsetTop;
+          const elementHeight = element.clientHeight;
+          
+          const scrollToPosition = elementTop - (containerHeight / 3) + (elementHeight / 2);
+          
+          container.scrollTo({
+            top: scrollToPosition,
+            behavior: 'smooth'
+          });
+        }
+      }
+    }
+  }, [currentDisplayedText, selectedLines]);
+
+  return (
+    <div className="display-panel">
+      {/* Fixed Header */}
+      <div className="panel-header">
+        Shortcut Kadi
+      </div>
+      
+      {/* Scrollable Content */}
+      <div className="selected-lines-content">
+        {selectedLines.length === 0 ? (
+          <p className="panel-placeholder">Selected lines will appear here</p>
+        ) : (
+          selectedLines.map((line, index) => (
+            <div
+              key={index}
+              data-index={index}
+              className={`selected-line ${
+                currentDisplayedText === line ? 'selected' : ''
+              }`}
+              onClick={() => {
+                onDisplayLine(line);
+                const element = document.querySelector(`.selected-line[data-index="${index}"]`);
+                element?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+              }}
+            >
+              <div className="line-number">{index < 9 ? index + 1 : ''}</div>
+              <div className="line-text">{line}</div>
+              <div 
+                className="remove-btn"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onRemoveLine(index);
+                }}
+              >
+                ×
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default SelectedLinesPanel; 
+================================================== 
+ 
+------------------------ 
+Above is SettingModal.jsx file code 
+------------------------ 
+import React, { useState } from 'react';
+import { FaBold, FaItalic, FaUnderline, FaAlignLeft, FaAlignCenter, FaAlignRight, FaListUl } from 'react-icons/fa';
+import '../styles/SettingModal.css';
+
+const SettingsModal = ({ isOpen, onClose, editorSettings, onUpdateEditorSettings }) => {
+  const [localSettings, setLocalSettings] = useState(editorSettings);
+
+  const handleSave = () => {
+    onUpdateEditorSettings(localSettings);
+    onClose();
+  };
+
+  const toggleFormat = (format) => {
+    setLocalSettings({
+      ...localSettings,
+      [format]: !localSettings[format]
+    });
+  };
+
+  const setAlignment = (alignment) => {
+    setLocalSettings({
+      ...localSettings,
+      textAlign: alignment
+    });
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="settings-modal">
+      <div className="settings-content">
+        <h2>Output Text Editor</h2>
+        
+        <div className="editor-controls">
+          <div className="editor-group">
+            <label htmlFor="editorFontSize">Font Size</label>
+            <select
+              id="editorFontSize"
+              value={localSettings.fontSize}
+              onChange={(e) => setLocalSettings({...localSettings, fontSize: e.target.value})}
+            >
+              <option value="24px">24px</option>
+              <option value="28px">28px</option>
+              <option value="32px">32px</option>
+              <option value="36px">36px</option>
+              <option value="40px">40px</option>
+              <option value="44px">44px</option>
+              <option value="48px">48px</option>
+              <option value="52px">52px</option>
+              <option value="56px">56px</option>
+              <option value="60px">60px</option>
+              <option value="64px">64px</option>
+            </select>
+          </div>
+          
+          <div className="editor-group">
+            <label htmlFor="editorTextColor">Text Color</label>
+            <input
+              type="color"
+              id="editorTextColor"
+              value={localSettings.textColor}
+              onChange={(e) => setLocalSettings({...localSettings, textColor: e.target.value})}
+            />
+          </div>
+          
+          <div className="editor-group">
+            <label htmlFor="editorBgColor">Background Color</label>
+            <input
+              type="color"
+              id="editorBgColor"
+              value={localSettings.bgColor}
+              onChange={(e) => setLocalSettings({...localSettings, bgColor: e.target.value})}
+            />
+          </div>
+          
+          <div className="editor-group">
+            <label htmlFor="editorFontFamily">Font Family</label>
+            <select
+              id="editorFontFamily"
+              value={localSettings.fontFamily}
+              onChange={(e) => setLocalSettings({...localSettings, fontFamily: e.target.value})}
+            >
+              <option value="'Guj_Regular_Bold_Sulekh', sans-serif">Gujarati Sulekh</option>
+              <option value="'Segoe UI', Tahoma, Geneva, Verdana, sans-serif">Default</option>
+              <option value="Arial, sans-serif">Arial</option>
+              <option value="'Times New Roman', serif">Times New Roman</option>
+            </select>
+          </div>
+        </div>
+        
+        <div className="text-format-controls">
+          <button
+            className={`format-btn ${localSettings.isBold ? 'active' : ''}`}
+            onClick={() => toggleFormat('isBold')}
+            title="Bold"
+          >
+            <FaBold />
+          </button>
+          <button
+            className={`format-btn ${localSettings.isItalic ? 'active' : ''}`}
+            onClick={() => toggleFormat('isItalic')}
+            title="Italic"
+          >
+            <FaItalic />
+          </button>
+          <button
+            className={`format-btn ${localSettings.isUnderline ? 'active' : ''}`}
+            onClick={() => toggleFormat('isUnderline')}
+            title="Underline"
+          >
+            <FaUnderline />
+          </button>
+          <button
+            className={`format-btn ${localSettings.textAlign === 'left' ? 'active' : ''}`}
+            onClick={() => setAlignment('left')}
+            title="Align Left"
+          >
+            <FaAlignLeft />
+          </button>
+          <button
+            className={`format-btn ${localSettings.textAlign === 'center' ? 'active' : ''}`}
+            onClick={() => setAlignment('center')}
+            title="Align Center"
+          >
+            <FaAlignCenter />
+          </button>
+          <button
+            className={`format-btn ${localSettings.textAlign === 'right' ? 'active' : ''}`}
+            onClick={() => setAlignment('right')}
+            title="Align Right"
+          >
+            <FaAlignRight />
+          </button>
+          <button
+            className="format-btn"
+            title="Bullet List"
+          >
+            <FaListUl />
+          </button>
+        </div>
+        
+        <div className="settings-actions">
+          <button className="btn btn-secondary" onClick={onClose}>Close</button>
+          <button className="btn btn-primary" onClick={handleSave}>Save Changes</button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default SettingsModal; 
+================================================== 
+ 
+------------------------ 
+Above is VmixModal.jsx file code 
+------------------------ 
+import React, { useState } from 'react';
+import '../styles/VmixModal.css';
+
+const VmixModal = ({ isOpen, onClose, onSave, settings }) => {
+    const [localSettings, setLocalSettings] = useState(settings);
+    const [testResult, setTestResult] = useState('');
+
+    const handleSave = () => {
+        onSave({
+            inputNumber: parseInt(localSettings.inputNumber) || 1,
+            overlayNumber: Math.min(4, Math.max(1, parseInt(localSettings.overlayNumber) || 1)),
+            ipAddress: localSettings.ipAddress || '127.0.0.1',
+            port: parseInt(localSettings.port) || 8088
+        });
+    };
+
+    const testOverlay = async () => {
+        try {
+          const { ipAddress, port, inputNumber, overlayNumber } = localSettings;
+          
+          // Trigger overlay ON
+          const onResponse = await fetch(
+            `http://${ipAddress}:${port}/api/?Function=OverlayInput${overlayNumber}In&Input=${inputNumber}`
+          );
+          if (!onResponse.ok) throw new Error('Failed to activate overlay');
+          setTestResult("Overlay ON - check vMix");
+      
+          // Trigger overlay OFF after 3 seconds
+          setTimeout(async () => {
+            const offResponse = await fetch(
+              `http://${ipAddress}:${port}/api/?Function=OverlayInput${overlayNumber}Out&Input=${inputNumber}`
+            );
+            if (!offResponse.ok) throw new Error('Failed to deactivate overlay');
+            setTestResult("Overlay OFF - test complete");
+          }, 3000);
+      
+        } catch (error) {
+          setTestResult(`Overlay test failed: ${error.message}`);
+        }
+      };
+
+    const testConnection = async () => {
+        setTestResult("Testing connection...");
+
+        try {
+            const ipAddress = localSettings.ipAddress || '127.0.0.1';
+            const port = localSettings.port || 8088;
+
+            if (!ipAddress.match(/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/)) {
+                throw new Error("Invalid IP address format");
+            }
+
+            const response = await fetch(`http://${ipAddress}:${port}/api`);
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+
+            const text = await response.text();
+            if (text.includes('<vmix>')) {
+                const version = text.match(/<version>(.*?)<\/version>/)?.[1] || 'unknown';
+                setTestResult(`Connected to vMix ${version}`);
+            } else {
+                throw new Error("Invalid vMix response");
+            }
+        } catch (error) {
+            setTestResult(`Connection failed: ${error.message}`);
+            console.error("Connection error:", error);
+        }
+    };
+
+    if (!isOpen) return null;
+
+    return (
+        <div className="vmix-modal">
+            <div className="vmix-content">
+                <h2>VMix Integration Settings</h2>
+
+                <div className="vmix-controls">
+                    <div className="vmix-group">
+                        <label htmlFor="vmixInputNumber">Input Number</label>
+                        <input
+                            type="number"
+                            id="vmixInputNumber"
+                            min="1"
+                            max="100"
+                            value={localSettings.inputNumber}
+                            onChange={(e) => setLocalSettings({ ...localSettings, inputNumber: e.target.value })}
+                            placeholder="VMix Input Number"
+                        />
+                    </div>
+
+                    <div className="vmix-group">
+                        <label htmlFor="vmixOverlayNumber">Overlay Number (1-4)</label>
+                        <input
+                            type="number"
+                            id="vmixOverlayNumber"
+                            min="1"
+                            max="4"
+                            value={localSettings.overlayNumber}
+                            onChange={(e) => setLocalSettings({ ...localSettings, overlayNumber: e.target.value })}
+                            placeholder="1-4"
+                        />
+                    </div>
+
+                    <div className="vmix-group">
+                        <label htmlFor="vmixIpAddress">VMix IP Address</label>
+                        <input
+                            type="text"
+                            id="vmixIpAddress"
+                            value={localSettings.ipAddress}
+                            onChange={(e) => setLocalSettings({ ...localSettings, ipAddress: e.target.value })}
+                            placeholder="e.g., 192.168.1.100"
+                        />
+                    </div>
+
+                    <div className="vmix-group">
+                        <label htmlFor="vmixPort">Port (default: 8088)</label>
+                        <input
+                            type="number"
+                            id="vmixPort"
+                            value={localSettings.port}
+                            onChange={(e) => setLocalSettings({ ...localSettings, port: e.target.value })}
+                            placeholder="8088"
+                        />
+                    </div>
+                </div>
+
+                <div className="vmix-test">
+                    <button className="btn btn-secondary" onClick={testConnection}>Test Connection</button>
+                    <span className={testResult.includes('Connected') ? 'success' : 'error'}>{testResult}</span>
+                </div>
+
+                <div className="vmix-actions">
+                    <button className="btn btn-secondary" onClick={onClose}>Close</button>
+                    <button className="btn btn-primary" onClick={handleSave}>Save Settings</button>
+                    <button
+                        className="btn btn-secondary"
+                        onClick={async () => {
+                            await testConnection();
+                            await testOverlay();
+                        }}
+                        style={{ marginLeft: 'auto' }}
+                    >
+                        Test Overlay
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    );
+};
+
+export default VmixModal; 
+================================================== 
+ 
+------------------------ 
+Above is App.test.js file code 
+------------------------ 
+import { render, screen } from '@testing-library/react';
+import App from './App';
+
+test('renders learn react link', () => {
+  render(<App />);
+  const linkElement = screen.getByText(/learn react/i);
+  expect(linkElement).toBeInTheDocument();
+});
+ 
+================================================== 
+ 
+------------------------ 
+Above is index.css file code 
+------------------------ 
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+ 
+================================================== 
+ 
+------------------------ 
+Above is logo.svg file code 
+------------------------ 
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 841.9 595.3"><g fill="#61DAFB"><path d="M666.3 296.5c0-32.5-40.7-63.3-103.1-82.4 14.4-63.6 8-114.2-20.2-130.4-6.5-3.8-14.1-5.6-22.4-5.6v22.3c4.6 0 8.3.9 11.4 2.6 13.6 7.8 19.5 37.5 14.9 75.7-1.1 9.4-2.9 19.3-5.1 29.4-19.6-4.8-41-8.5-63.5-10.9-13.5-18.5-27.5-35.3-41.6-50 32.6-30.3 63.2-46.9 84-46.9V78c-27.5 0-63.5 19.6-99.9 53.6-36.4-33.8-72.4-53.2-99.9-53.2v22.3c20.7 0 51.4 16.5 84 46.6-14 14.7-28 31.4-41.3 49.9-22.6 2.4-44 6.1-63.6 11-2.3-10-4-19.7-5.2-29-4.7-38.2 1.1-67.9 14.6-75.8 3-1.8 6.9-2.6 11.5-2.6V78.5c-8.4 0-16 1.8-22.6 5.6-28.1 16.2-34.4 66.7-19.9 130.1-62.2 19.2-102.7 49.9-102.7 82.3 0 32.5 40.7 63.3 103.1 82.4-14.4 63.6-8 114.2 20.2 130.4 6.5 3.8 14.1 5.6 22.5 5.6 27.5 0 63.5-19.6 99.9-53.6 36.4 33.8 72.4 53.2 99.9 53.2 8.4 0 16-1.8 22.6-5.6 28.1-16.2 34.4-66.7 19.9-130.1 62-19.1 102.5-49.9 102.5-82.3zm-130.2-66.7c-3.7 12.9-8.3 26.2-13.5 39.5-4.1-8-8.4-16-13.1-24-4.6-8-9.5-15.8-14.4-23.4 14.2 2.1 27.9 4.7 41 7.9zm-45.8 106.5c-7.8 13.5-15.8 26.3-24.1 38.2-14.9 1.3-30 2-45.2 2-15.1 0-30.2-.7-45-1.9-8.3-11.9-16.4-24.6-24.2-38-7.6-13.1-14.5-26.4-20.8-39.8 6.2-13.4 13.2-26.8 20.7-39.9 7.8-13.5 15.8-26.3 24.1-38.2 14.9-1.3 30-2 45.2-2 15.1 0 30.2.7 45 1.9 8.3 11.9 16.4 24.6 24.2 38 7.6 13.1 14.5 26.4 20.8 39.8-6.3 13.4-13.2 26.8-20.7 39.9zm32.3-13c5.4 13.4 10 26.8 13.8 39.8-13.1 3.2-26.9 5.9-41.2 8 4.9-7.7 9.8-15.6 14.4-23.7 4.6-8 8.9-16.1 13-24.1zM421.2 430c-9.3-9.6-18.6-20.3-27.8-32 9 .4 18.2.7 27.5.7 9.4 0 18.7-.2 27.8-.7-9 11.7-18.3 22.4-27.5 32zm-74.4-58.9c-14.2-2.1-27.9-4.7-41-7.9 3.7-12.9 8.3-26.2 13.5-39.5 4.1 8 8.4 16 13.1 24 4.7 8 9.5 15.8 14.4 23.4zM420.7 163c9.3 9.6 18.6 20.3 27.8 32-9-.4-18.2-.7-27.5-.7-9.4 0-18.7.2-27.8.7 9-11.7 18.3-22.4 27.5-32zm-74 58.9c-4.9 7.7-9.8 15.6-14.4 23.7-4.6 8-8.9 16-13 24-5.4-13.4-10-26.8-13.8-39.8 13.1-3.1 26.9-5.8 41.2-7.9zm-90.5 125.2c-35.4-15.1-58.3-34.9-58.3-50.6 0-15.7 22.9-35.6 58.3-50.6 8.6-3.7 18-7 27.7-10.1 5.7 19.6 13.2 40 22.5 60.9-9.2 20.8-16.6 41.1-22.2 60.6-9.9-3.1-19.3-6.5-28-10.2zM310 490c-13.6-7.8-19.5-37.5-14.9-75.7 1.1-9.4 2.9-19.3 5.1-29.4 19.6 4.8 41 8.5 63.5 10.9 13.5 18.5 27.5 35.3 41.6 50-32.6 30.3-63.2 46.9-84 46.9-4.5-.1-8.3-1-11.3-2.7zm237.2-76.2c4.7 38.2-1.1 67.9-14.6 75.8-3 1.8-6.9 2.6-11.5 2.6-20.7 0-51.4-16.5-84-46.6 14-14.7 28-31.4 41.3-49.9 22.6-2.4 44-6.1 63.6-11 2.3 10.1 4.1 19.8 5.2 29.1zm38.5-66.7c-8.6 3.7-18 7-27.7 10.1-5.7-19.6-13.2-40-22.5-60.9 9.2-20.8 16.6-41.1 22.2-60.6 9.9 3.1 19.3 6.5 28.1 10.2 35.4 15.1 58.3 34.9 58.3 50.6-.1 15.7-23 35.6-58.4 50.6zM320.8 78.4z"/><circle cx="420.9" cy="296.5" r="45.7"/><path d="M520.5 78.1z"/></g></svg> 
+================================================== 
+ 
+------------------------ 
+Above is reportWebVitals.js file code 
+------------------------ 
+const reportWebVitals = onPerfEntry => {
+  if (onPerfEntry && onPerfEntry instanceof Function) {
+    import('web-vitals').then(({ getCLS, getFID, getFCP, getLCP, getTTFB }) => {
+      getCLS(onPerfEntry);
+      getFID(onPerfEntry);
+      getFCP(onPerfEntry);
+      getLCP(onPerfEntry);
+      getTTFB(onPerfEntry);
+    });
+  }
+};
+
+export default reportWebVitals;
+ 
+================================================== 
+ 
+------------------------ 
+Above is setupTests.js file code 
+------------------------ 
+// jest-dom adds custom jest matchers for asserting on DOM nodes.
+// allows you to do things like:
+// expect(element).toHaveTextContent(/react/i)
+// learn more: https://github.com/testing-library/jest-dom
+import '@testing-library/jest-dom';
+ 
+================================================== 
+ 
+------------------------ 
+Above is App.css file code 
+------------------------ 
+:root {
+  --primary-color: #4285f4;
+  --secondary-color: #34a853;
+  --accent-color: #ea4335;
+  --light-gray: #f5f5f5;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: #f9f9f9;
+  color: #333;
+  overflow: hidden;
+
+}
+
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+.main-container {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+  flex-direction: column;
+}
+
+@media (min-width: 768px) {
+  .main-container {
+    flex-direction: row;
+  }
+}
+
+.btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: all 0.2s;
+}
+
+.btn-primary {
+  background-color: var(--primary-color);
+  color: white;
+}
+
+.btn-secondary {
+  background-color: var(--light-gray);
+  color: var(--dark-gray);
+}
+
+.btn:hover {
+  opacity: 0.9;
+  transform: translateY(-2px);
+}
+
+.success {
+  color: #34a853;
+}
+
+.error {
+  color: #ea4335;
+}
+
+@font-face {
+  font-family: 'Guj_Regular_Bold_Sulekh';
+  src: url('https://cdn.jsdelivr.net/gh/Jenish-Gabani-Seva-Use/kirtan-kadi@main/01%20Guj%20Regular%20Bold%20Sulekh.ttf') format('truetype');
+  font-weight: bold;
+  font-style: normal;
+}
+
+.overlay-active {
+  box-shadow: 0 0 0 3px var(--accent-color);
+  transition: box-shadow 0.3s ease;
+}
+
+*:focus {
+  outline: none;
+} 
+================================================== 
+ 
+------------------------ 
+Above is Header.css file code 
+------------------------ 
+header {
+  padding: 15px;
+  background-color: white;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.logo {
+  font-size: 24px;
+  font-weight: bold;
+  color: var(--primary-color);
+}
+
+.header-icons {
+  display: flex;
+  gap: 15px;
+}
+
+.pencil-icon, .settings-icon, .vmix-icon {
+  font-size: 24px;
+  cursor: pointer;
+  color: var(--primary-color);
+  padding: 5px 10px;
+  border-radius: 50%;
+  transition: all 0.3s;
+}
+
+.pencil-icon:hover, .settings-icon:hover, .vmix-icon:hover {
+  background-color: var(--light-gray);
+  transform: scale(1.1);
+} 
+================================================== 
+ 
+------------------------ 
+Above is InputModal.css file code 
+------------------------ 
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0,0,0,0.5);
+  z-index: 100;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.modal-content {
+  background-color: white;
+  padding: 30px;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 800px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-textarea {
+  width: 100%;
+  height: 60vh;
+  padding: 15px;
+  font-size: 16px;
+  border: 2px solid #ddd;
+  border-radius: 5px;
+  resize: none;
+  margin-bottom: 20px;
+  font-family: 'Guj_Regular_Bold_Sulekh', sans-serif;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+} 
+================================================== 
+ 
+------------------------ 
+Above is LinesPanel.css file code 
+------------------------ 
+/* Main panel container */
+.lines-panel {
+  width: 100%;
+  height: 100%;
+  padding: 15px;
+  overflow-y: auto;
+  background-color: white;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  margin: 8px 8px 20px 8px;
+  scroll-behavior: smooth;
+  scroll-padding: 100px 0;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  position: relative;
+}
+
+@media (min-width: 768px) {
+  .lines-panel {
+    width: calc(50% - 20px);
+    height: calc(100vh - 280px);
+    margin: 10px 10px 30px 10px;
+    border: 2px solid #1f1f1f;
+  }
+}
+
+/* Panel header */
+.panel-header {
+  font-weight: bold;
+  margin-bottom: 5px;
+  padding-bottom: 5px;
+  border-bottom: 2px solid var(--light-gray);
+  color: var(--primary-color);
+  text-align: center;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: sticky;
+  top: 0;
+  background-color: white;
+  z-index: 10;
+  position: sticky;
+  top: 0;
+}
+
+.panel-placeholder {
+  color: #999;
+  font-style: italic;
+  text-align: center;
+  padding: 20px;
+}
+
+/* Individual line items */
+.line-item {
+  padding: 12px 15px;
+  margin-bottom: 8px;
+  border-radius: 6px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: all 0.2s;
+  cursor: pointer;
+  scroll-margin: 50px;
+}
+
+.line-item.selected {
+  background-color: rgba(66, 133, 244, 0.1);
+  border-left: 3px solid var(--primary-color);
+}
+
+.line-item:hover {
+  background-color: rgba(66, 133, 244, 0.05);
+}
+
+.line-text {
+  flex: 1;
+  font-family: 'Guj_Regular_Bold_Sulekh', sans-serif;
+  word-break: break-word;
+}
+
+.line-index {
+  margin-right: 10px;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-weight: bold;
+  min-width: 25px;
+}
+
+/* Action buttons */
+.add-btn {
+  color: var(--secondary-color);
+  cursor: pointer;
+  font-size: 20px;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.2s;
+}
+
+.add-btn:hover {
+  background-color: rgba(52, 168, 83, 0.1);
+  transform: scale(1.1);
+}
+
+.delete-icon {
+  cursor: pointer;
+  color: var(--accent-color);
+  font-size: 18px;
+  padding: 2px 5px;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.delete-icon:hover {
+  background-color: rgba(234, 67, 53, 0.1);
+}
+
+.delete-icon.active {
+  background-color: rgba(234, 67, 53, 0.2);
+}
+
+/* Delete mode specific styles */
+.line-checkbox {
+  margin-right: 10px;
+  cursor: pointer;
+  transform: scale(1.2);
+}
+
+.delete-confirm {
+  margin-top: 15px;
+  text-align: center;
+  position: sticky;
+  bottom: 0;
+  background-color: white;
+  padding: 10px;
+  border-top: 1px solid #eee;
+}
+
+.lines-content {
+  flex: 1;
+  overflow-y: auto;
+  padding-top: 5px; /* Add some space below header */
+  margin-top: 0px; /* Adjust based on your header height */
+}
+
+ 
+================================================== 
+ 
+------------------------ 
+Above is OutputArea.css file code 
+------------------------ 
+.output-area {
+  width: 100%;
+  padding: 5px 0;
+  text-align: center;
+  border-top: 2px solid #ddd;
+  height: 180px;
+  overflow-y: auto;
+  flex-shrink: 0;
+}
+
+.output-content {
+  max-width: 100%;
+  padding: 20px;
+  word-wrap: break-word;
+  margin-left: auto;
+  margin-right: auto;
+  height: 100%;
+  overflow-y: auto;
+  background-color: #f2cfa6; /* Default fallback */
+  font-size: 60px; /* Default fallback */
+  font-weight: bold;
+  color: #000000;
+  border-radius: 8px;
+  min-height: 140px;
+  max-height: 140px;
+  text-align: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-family: 'Guj_Regular_Bold_Sulekh', sans-serif !important;
+}
+
+@media (max-width: 767px) {
+  .output-content {
+    font-size: 28px !important;
+    padding: 15px;
+  }
+} 
+================================================== 
+ 
+------------------------ 
+Above is SelectedLinesPanel.css file code 
+------------------------ 
+/* Main panel container */
+.display-panel {
+  width: 100%;
+  padding: 15px;
+  overflow-y: auto;
+  background-color: white;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  margin: 8px 8px 20px 8px;
+  scroll-behavior: smooth;
+  scroll-padding: 100px 0;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  position: relative;
+}
+
+@media (min-width: 768px) {
+  .display-panel {
+    width: calc(50% - 20px);
+    height: calc(100vh - 280px);
+    margin: 10px 10px 30px 10px;
+    border: 2px solid #34a853;
+  }
+}
+
+/* Panel header */
+.panel-header {
+  font-weight: bold;
+  margin-bottom: 5px;
+  padding-bottom: 5px;
+  border-bottom: 2px solid var(--light-gray);
+  color: var(--primary-color);
+  text-align: center;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: sticky;
+  top: 0;
+  background-color: white;
+  z-index: 10;
+  position: sticky;
+  top: 0;
+}
+
+
+.panel-placeholder {
+  color: #999;
+  font-style: italic;
+  text-align: center;
+  padding: 20px;
+}
+
+/* Selected lines container */
+.selected-lines {
+  flex: 1;
+  overflow-y: auto;
+}
+
+/* Individual selected line items */
+.selected-line {
+  padding: 12px 15px;
+  margin-bottom: 8px;
+  border-radius: 6px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: all 0.2s;
+  cursor: pointer;
+  background-color: #f8f8f8;
+  scroll-margin: 50px;
+}
+
+.selected-line.selected {
+  background-color: rgba(66, 133, 244, 0.1);
+  border-left: 3px solid var(--primary-color);
+}
+
+.selected-line:hover {
+  background-color: rgba(66, 133, 244, 0.05);
+}
+
+/* Line number styling */
+.line-number {
+  font-weight: bold;
+  margin-right: 10px;
+  min-width: 25px;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  color: var(--secondary-color);
+}
+
+/* Line text styling */
+.line-text {
+  flex: 1;
+  font-family: 'Guj_Regular_Bold_Sulekh', sans-serif;
+  word-break: break-word;
+}
+
+/* Remove button styling */
+.remove-btn {
+  color: var(--accent-color);
+  cursor: pointer;
+  font-size: 18px;
+  width: 25px;
+  height: 25px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.2s;
+}
+
+.remove-btn:hover {
+  background-color: rgba(234, 67, 53, 0.1);
+  transform: scale(1.1);
+}
+
+/* Focus styles */
+.lines-panel:focus .selected-line.selected,
+.selected-lines:focus .selected-line.selected {
+  background-color: rgba(66, 133, 244, 0.2);
+  outline: 2px solid rgba(66, 133, 244, 0.3);
+}
+
+.selected-lines-content {
+  flex: 1;
+  overflow-y: auto;
+  padding-top: 5px; /* Add some space below header */
+  margin-top: 0px; /* Adjust based on your header height */
+}
+
+ 
+================================================== 
+ 
+------------------------ 
+Above is SettingModal.css file code 
+------------------------ 
+.settings-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0,0,0,0.5);
+  z-index: 100;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.settings-content {
+  background-color: white;
+  padding: 30px;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 800px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.editor-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.editor-group {
+  flex: 1;
+  min-width: 150px;
+}
+
+.editor-group label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: 500;
+}
+
+select, input[type="color"] {
+  padding: 8px;
+  border-radius: 4px;
+  border: 1px solid #ddd;
+  width: 100%;
+}
+
+.text-format-controls {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.format-btn {
+  padding: 8px 15px;
+  border: none;
+  border-radius: 4px;
+  background-color: #e0e0e0;
+  color: #333;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.format-btn:hover {
+  background-color: #d0d0d0;
+}
+
+.format-btn.active {
+  background-color: var(--primary-color);
+  color: white;
+}
+
+.settings-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+} 
+================================================== 
+ 
+------------------------ 
+Above is VmixModal.css file code 
+------------------------ 
+.vmix-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0,0,0,0.5);
+  z-index: 100;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.vmix-content {
+  background-color: white;
+  padding: 30px;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 600px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.vmix-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.vmix-group {
+  flex: 1;
+  min-width: 200px;
+}
+
+.vmix-group label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: 500;
+}
+
+.vmix-group input {
+  padding: 8px;
+  border-radius: 4px;
+  border: 1px solid #ddd;
+  width: 100%;
+}
+
+.vmix-test {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.vmix-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+} 
+================================================== 
+ 

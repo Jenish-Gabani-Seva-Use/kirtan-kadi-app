@@ -1,0 +1,38 @@
+.output-area {
+  width: 100%;
+  padding: 5px 0;
+  text-align: center;
+  border-top: 2px solid #ddd;
+  height: 180px;
+  overflow-y: auto;
+  flex-shrink: 0;
+}
+
+.output-content {
+  max-width: 100%;
+  padding: 20px;
+  word-wrap: break-word;
+  margin-left: auto;
+  margin-right: auto;
+  height: 100%;
+  overflow-y: auto;
+  background-color: #f2cfa6; /* Default fallback */
+  font-size: 60px; /* Default fallback */
+  font-weight: bold;
+  color: #000000;
+  border-radius: 8px;
+  min-height: 140px;
+  max-height: 140px;
+  text-align: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-family: 'Guj_Regular_Bold_Sulekh', sans-serif !important;
+}
+
+@media (max-width: 767px) {
+  .output-content {
+    font-size: 28px !important;
+    padding: 15px;
+  }
+}
