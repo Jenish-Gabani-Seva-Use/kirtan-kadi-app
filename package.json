@@ -1,5 +1,7 @@
 {
   "dependencies": {
-    "react-scripts": "^5.0.1"
+    "react-scripts": "^5.0.1",
+    "build": "react-scripts build"
+
   }
 }
