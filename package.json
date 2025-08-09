@@ -1,4 +1,5 @@
 {
+<<<<<<< HEAD
   "name": "kirtan-kadi-app-main",
   "version": "1.0.0",
   "description": "This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).",
@@ -847,6 +848,19 @@
     "yargs": "^16.2.0",
     "yargs-parser": "^20.2.9",
     "yocto-queue": "^0.1.0"
+=======
+  "name": "kirtan-kadi-app",
+  "version": "1.0.0",
+  "private": true,
+  "dependencies": {
+    "@fortawesome/fontawesome-free": "^6.7.2",
+    "@fortawesome/react-fontawesome": "^0.2.2",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-icons": "^5.5.0",
+    "react-router-dom": "^7.4.1",
+    "react-scripts": "5.0.1"
+>>>>>>> main
   },
   "scripts": {
     "start": "react-scripts start",
@@ -854,9 +868,18 @@
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
+<<<<<<< HEAD
   "keywords": [],
   "author": "",
   "license": "ISC",
+=======
+  "eslintConfig": {
+    "extends": [
+      "react-app",
+      "react-app/jest"
+    ]
+  },
+>>>>>>> main
   "browserslist": {
     "production": [
       ">0.2%",

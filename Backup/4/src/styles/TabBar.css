@@ -1,0 +1,178 @@
+.tab-bar {
+  background: #f5f5f5;
+  border-bottom: 1px solid #ddd;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  min-height: 40px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.tabs-container {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  overflow-x: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #888 #f1f1f1;
+}
+
+.tabs-container::-webkit-scrollbar {
+  height: 6px;
+}
+
+.tabs-container::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+.tabs-container::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 3px;
+}
+
+.tab {
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  background: #fff;
+  border: 1px solid #ddd;
+  border-bottom: none;
+  margin-right: 2px;
+  cursor: pointer;
+  min-width: 120px;
+  max-width: 200px;
+  position: relative;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.tab:hover {
+  background: #f9f9f9;
+}
+
+.tab.active {
+  background: #fff;
+  border-top: 2px solid #4CAF50;
+  padding-top: 7px;
+  z-index: 1;
+  box-shadow: 0 -2px 4px rgba(0,0,0,0.1);
+}
+
+.tab-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 14px;
+  color: #333;
+}
+
+.tab.active .tab-name {
+  font-weight: 500;
+  color: #000;
+}
+
+.tab-close {
+  margin-left: 8px;
+  background: none;
+  border: none;
+  font-size: 18px;
+  color: #666;
+  cursor: pointer;
+  padding: 0 4px;
+  line-height: 1;
+  border-radius: 3px;
+  transition: all 0.2s ease;
+}
+
+.tab-close:hover {
+  background: #e0e0e0;
+  color: #333;
+}
+
+.add-tab-btn {
+  background: none;
+  border: 1px solid #ddd;
+  border-bottom: none;
+  padding: 8px 16px;
+  margin-right: 8px;
+  cursor: pointer;
+  font-size: 18px;
+  color: #666;
+  transition: all 0.2s ease;
+  border-radius: 4px 4px 0 0;
+}
+
+.add-tab-btn:hover {
+  background: #f0f0f0;
+  color: #333;
+}
+
+/* Context Menu Styles */
+.context-menu {
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  padding: 4px 0;
+  z-index: 1000;
+  min-width: 120px;
+}
+
+.context-menu-item {
+  padding: 8px 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: #333;
+  transition: background-color 0.2s;
+}
+
+.context-menu-item:hover {
+  background-color: #f0f0f0;
+}
+
+.context-menu-item i {
+  width: 16px;
+  color: #666;
+}
+
+/* Tab Rename Input */
+.tab-rename-input {
+  background: white;
+  border: 1px solid #4CAF50;
+  border-radius: 3px;
+  padding: 2px 6px;
+  font-size: 14px;
+  outline: none;
+  width: calc(100% - 30px);
+  color: #333;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .tab {
+    min-width: 80px;
+    max-width: 150px;
+    padding: 6px 8px;
+  }
+  
+  .tab-name {
+    font-size: 12px;
+  }
+  
+  .add-tab-btn {
+    padding: 6px 12px;
+  }
+  
+  .context-menu {
+    min-width: 100px;
+  }
+  
+  .context-menu-item {
+    padding: 6px 12px;
+    font-size: 12px;
+  }
+}
