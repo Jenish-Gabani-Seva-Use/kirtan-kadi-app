@@ -1,0 +1,48 @@
+.output-container {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 150px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #f2cfa6;
+  border-top: 2px solid #ddd;
+  z-index: 100;
+  padding: 10px;
+  overflow: hidden;
+}
+
+.output-content {
+  width: 100%;
+  max-width: 95%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  word-break: break-word;
+  overflow: hidden;
+  padding: 10px;
+}
+
+.output-content[data-placeholder]:empty:before {
+  content: attr(data-placeholder);
+  color: #888;
+}
+
+.overlay-active {
+  box-shadow: 0 0 0 3px #ea4335;
+}
+
+@media (max-width: 767px) {
+  .output-container {
+    height: 120px;
+  }
+  
+  .output-content {
+    font-size: 28px !important;
+    padding: 5px;
+  }
+} 
