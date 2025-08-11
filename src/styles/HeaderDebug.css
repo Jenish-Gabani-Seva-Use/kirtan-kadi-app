@@ -1,0 +1,46 @@
+/* Debug CSS to force header visibility */
+
+/* Force all header elements to be visible */
+.app-header * {
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+/* Ensure header sections don't collapse */
+.header-left,
+.header-center,
+.header-right {
+  min-width: auto !important;
+  min-height: 40px !important;
+  overflow: visible !important;
+}
+
+/* Force buttons to show */
+.header-button {
+  display: inline-flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  position: relative !important;
+  z-index: 10001 !important;
+}
+
+/* Debug: Add red border to see if elements exist */
+.header-right {
+  border: 2px solid red !important;
+}
+
+.header-button {
+  border: 2px solid yellow !important;
+}
+
+/* Prevent any media query from hiding elements */
+@media all {
+  .header-left,
+  .header-center,
+  .header-right,
+  .header-button {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
+}

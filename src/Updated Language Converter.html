@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Converter</title>
+    <style>
+      .title { margin-bottom: 2rem; font-size: 2.25rem; line-height: 2.5rem; font-weight: 700; text-align: center; }
+      .main_container { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2rem; }
+      .box { display: flex; flex-direction: column; gap: 1.5rem; }
+      .label { display: block; margin-bottom: 0.5rem; font-size: 1.875rem; line-height: 2.25rem; font-weight: 500; color: #111827; }
+      .text_Area { padding: 0.5rem; border-radius: 1.5rem; border-width: 2px; border-color: #d1d5db; width: 100%; height: 16rem; font-size: 1.125rem; line-height: 1.75rem; }
+      @media (min-width: 640px) { .main { padding-left: 0.75rem; padding-right: 0.75rem; } }
+      @media (min-width: 1024px) { .main { padding-left: 1.5rem; padding-right: 1.5rem; } }
+      @media (min-width: 1280px) { .main { margin-left: 5rem; margin-right: 5rem; } }
+    </style>
+  </head>
+  <body style="background-color: #d7d8db; margin: 0; padding: 0">
+    <div class="main">
+      <h1 class="title">જય શ્રી સ્વામિનારાયણ</h1>
+      <div class="main_container">
+        <div class="box">
+          <div>
+            <label for="message" class="label">ગુજરાતી યુનિકોડ ટેક્સ્ટ</label>
+            <textarea id="unicodeText" class="text_Area" spellcheck="false"></textarea>
+          </div>
+        </div>
+        <div class="box">
+          <div>
+            <label for="message" class="label">સુલેખ ટેક્સ્ટ</label>
+            <textarea id="sulekhText" style="font-family: 'Guj_Regular_SULEKH'" class="text_Area" spellcheck="false"></textarea>
+          </div>
+        </div>
+        <div class="box">
+          <div>
+            <label for="message" class="label">હિન્દી યુનિકોડ ટેક્સ્ટ</label>
+            <textarea id="hindiUnicode" class="text_Area" spellcheck="false"></textarea>
+          </div>
+        </div>
+        <div class="box">
+          <div>
+            <label for="message" class="label">અંગ્રેજી ટેક્સ્ટ</label>
+            <textarea id="englishText" class="text_Area" spellcheck="false"></textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script>
+      const unicodeTextEl = document.getElementById("unicodeText");
+      const sulekhTextEl = document.getElementById("sulekhText");
+      const hindiUnicodeEl = document.getElementById("hindiUnicode");
+      const englishTextEl = document.getElementById("englishText");
+
+      const SelfGujaratiToEnglishMap = {
+        "૧": "1", "૨": "2", "૩": "3", "૪": "4", "૫": "5", "૬": "6", "૭": "7", "૮": "8", "૯": "9",
+        "ક": "ka", "કા": "ka", "કિ": "ki", "કી": "ki", "કુ": "ku", "કૂ": "ku", "કે": "ke", "કૈ": "kai", "કો": "ko", "કૌ": "kau", "કં": "kan", "કઃ": "kah", "કૅ": "ke", "કૉ": "ko",
+        "ખ": "kha", "ખા": "kha", "ખિ": "khi", "ખી": "khi", "ખુ": "khu", "ખૂ": "khu", "ખે": "khe", "ખૈ": "khai", "ખો": "kho", "ખૌ": "khau", "ખં": "khan", "ખઃ": "khah", "ખૅ": "khe", "ખૉ": "kho",
+        "ગ": "ga", "ગા": "ga", "ગિ": "gi", "ગી": "gi", "ગુ": "gu", "ગૂ": "gu", "ગે": "ge", "ગૈ": "gai", "ગો": "go", "ગૌ": "gau", "ગં": "gan", "ગઃ": "gah", "ગૅ": "ge", "ગૉ": "go",
+        "ઘ": "gha", "ઘા": "gha", "ઘિ": "ghi", "ઘી": "ghi", "ઘુ": "ghu", "ઘૂ": "ghu", "ઘે": "ghe", "ઘૈ": "ghai", "ઘો": "gho", "ઘૌ": "ghau", "ઘં": "ghan", "ઘઃ": "ghah", "ઘૅ": "ghe", "ઘૉ": "gho",
+        "ચ": "cha", "ચા": "cha", "ચિ": "chi", "ચી": "chi", "ચુ": "chu", "ચૂ": "chu", "ચે": "che", "ચૈ": "chai", "ચો": "cho", "ચૌ": "chau", "ચં": "chan", "ચઃ": "chah", "ચૅ": "che", "ચૉ": "cho",
+        "છ": "chha", "છા": "chha", "છિ": "chhi", "છી": "chhi", "છુ": "chhu", "છૂ": "chhu", "છે": "chhe", "છૈ": "chhai", "છો": "chho", "છૌ": "chhau", "છં": "chhan", "છઃ": "chhah", "છૅ": "chhe", "છૉ": "chho",
+        "જ": "ja", "જા": "ja", "જિ": "ji", "જી": "ji", "જુ": "ju", "જૂ": "ju", "જે": "je", "જૈ": "jai", "જો": "jo", "જૌ": "jau", "જં": "jan", "જઃ": "jah", "જૅ": "je", "જૉ": "jo",
+        "ઝ": "zha", "ઝા": "zha", "ઝિ": "zhi", "ઝી": "zhi", "ઝુ": "zhu", "ઝૂ": "zhu", "ઝે": "zhe", "ઝૈ": "zhai", "ઝો": "zho", "ઝૌ": "zhau", "ઝં": "zhan", "ઝઃ": "zhah", "ઝૅ": "zhe", "ઝૉ": "zho",
+        "ટ": "ta", "ટા": "ta", "ટિ": "ti", "ટી": "ti", "ટુ": "tu", "ટૂ": "tu", "ટે": "te", "ટૈ": "tai", "ટો": "to", "ટૌ": "tau", "ટં": "tan", "ટઃ": "tah", "ટૅ": "te", "ટૉ": "to",
+        "ઠ": "tha", "ઠા": "tha", "ઠિ": "thi", "ઠી": "thi", "ઠુ": "thu", "ઠૂ": "thu", "ઠે": "the", "ઠૈ": "thai", "ઠો": "tho", "ઠૌ": "thau", "ઠં": "than", "ઠઃ": "thah", "ઠૅ": "the", "ઠૉ": "tho",
+        "ડ": "da", "ડા": "da", "ડિ": "di", "ડી": "di", "ડુ": "du", "ડૂ": "du", "ડે": "de", "ડૈ": "dai", "ડો": "do", "ડૌ": "dau", "ડં": "dan", "ડઃ": "dah", "ડૅ": "de", "ડૉ": "do",
+        "ઢ": "dha", "ઢા": "dha", "ઢિ": "dhi", "ઢી": "dhi", "ઢુ": "dhu", "ઢૂ": "dhu", "ઢે": "dhe", "ઢૈ": "dhai", "ઢો": "dho", "ઢૌ": "dhau", "ઢં": "dhan", "ઢઃ": "dhah", "ઢ���": "dhe", "ઢૉ": "dho",
+        "ણ": "na", "ણા": "na", "ણિ": "ni", "ણી": "ni", "ણુ": "nu", "ણૂ": "nu", "ણે": "ne", "ણૈ": "nai", "ણો": "no", "ણૌ": "nau", "ણં": "nan", "ણઃ": "nah", "ણૅ": "ne", "ણૉ": "no",
+        "ત": "ta", "તા": "ta", "તિ": "ti", "તી": "ti", "તુ": "tu", "તૂ": "tu", "તે": "te", "તૈ": "tai", "તો": "to", "તૌ": "tau", "તં": "tan", "તઃ": "tah", "તૅ": "te", "તૉ": "to",
+        "થ": "tha", "થા": "tha", "થિ": "thi", "થી": "thi", "થુ": "thu", "થૂ": "thu", "થે": "the", "થૈ": "thai", "થો": "tho", "થૌ": "thau", "થં": "than", "થઃ": "thah", "થૅ": "the", "થૉ": "tho",
+        "દ": "da", "દા": "da", "દિ": "di", "દી": "di", "દુ": "du", "દૂ": "du", "દે": "de", "દૈ": "dai", "દો": "do", "દૌ": "dau", "દં": "dan", "દઃ": "dah", "દૅ": "de", "દૉ": "do",
+        "ધ": "dha", "ધા": "dha", "ધિ": "dhi", "ધી": "dhi", "ધુ": "dhu", "ધૂ": "dhu", "ધે": "dhe", "ધૈ": "dhai", "ધો": "dho", "ધૌ": "dhau", "ધં": "dhan", "ધઃ": "dhah", "ધૅ": "dhe", "ધૉ": "dho",
+        "ન": "na", "ના": "na", "નિ": "ni", "ની": "ni", "નુ": "nu", "નૂ": "nu", "ને": "ne", "નૈ": "nai", "નો": "no", "નૌ": "nau", "નં": "nan", "નઃ": "nah", "નૅ": "ne", "નૉ": "no",
+        "પ": "pa", "પા": "pa", "પિ": "pi", "પી": "pi", "પુ": "pu", "પૂ": "pu", "પે": "pe", "પૈ": "pai", "પો": "po", "પૌ": "pau", "પં": "pan", "પઃ": "pah", "પૅ": "pe", "પૉ": "po",
+        "ફ": "fa", "ફા": "fa", "ફિ": "fi", "ફી": "fi", "ફુ": "fu", "ફૂ": "fu", "ફે": "fe", "ફૈ": "fai", "ફો": "fo", "ફૌ": "fau", "ફં": "fan", "ફઃ": "fah", "ફૅ": "fe", "ફૉ": "fo",
+        "બ": "ba", "બા": "ba", "બિ": "bi", "બી": "bi", "બુ": "bu", "બૂ": "bu", "બે": "be", "બૈ": "bai", "બો": "bo", "બૌ": "bau", "બં": "ban", "બઃ": "bah", "બૅ": "be", "બૉ": "bo",
+        "ભ": "bha", "ભા": "bha", "ભિ": "bhi", "ભી": "bhi", "ભુ": "bhu", "ભૂ": "bhu", "ભે": "bhe", "ભૈ": "bhai", "ભો": "bho", "ભૌ": "bhau", "ભં": "bhan", "ભઃ": "bhah", "ભૅ": "bhe", "ભૉ": "bho",
+        "મ": "ma", "મા": "ma", "મિ": "mi", "મી": "mi", "મુ": "mu", "મૂ": "mu", "મે": "me", "મૈ": "mai", "મો": "mo", "મૌ": "mau", "મં": "man", "મઃ": "mah", "મૅ": "me", "મૉ": "mo",
+        "ય": "ya", "યા": "ya", "યિ": "yi", "યી": "yi", "યુ": "yu", "યૂ": "yu", "યે": "ye", "યૈ": "yai", "યો": "yo", "યૌ": "yau", "યં": "yan", "યઃ": "yah", "યૅ": "ye", "યૉ": "yo",
+        "ર": "ra", "રા": "ra", "રિ": "ri", "રી": "ri", "રુ": "ru", "રૂ": "ru", "રે": "re", "રૈ": "rai", "રો": "ro", "રૌ": "rau", "રં": "ran", "રઃ": "rah", "રૅ": "re", "રૉ": "ro",
+        "લ": "la", "લા": "la", "લિ": "li", "લી": "li", "લુ": "lu", "લૂ": "lu", "લે": "le", "લૈ": "lai", "લો": "lo", "લૌ": "lau", "લં": "lan", "લઃ": "lah", "લૅ": "le", "લૉ": "lo",
+        "વ": "va", "વ���": "va", "વિ": "vi", "વી": "vi", "વુ": "vu", "વૂ": "vu", "વે": "ve", "વૈ": "vai", "વો": "vo", "વૌ": "vau", "વં": "van", "વઃ": "vah", "વૅ": "ve", "વૉ": "vo",
+        "શ": "sha", "શા": "sha", "શિ": "shi", "શી": "shi", "શુ": "shu", "શૂ": "shu", "શે": "she", "શૈ": "shai", "શો": "sho", "શૌ": "shau", "શં": "shan", "શઃ": "shah", "શૅ": "she", "શૉ": "sho",
+        "ષ": "sha", "ષા": "sha", "ષિ": "shi", "ષી": "shi", "ષુ": "shu", "ષૂ": "shu", "ષે": "she", "ષૈ": "shai", "ષો": "sho", "ષૌ": "shau", "ષં": "shan", "ષઃ": "shah", "ષૅ": "she", "ષૉ": "sho",
+        "સ": "sa", "સા": "sa", "સિ": "si", "સી": "si", "સુ": "su", "સૂ": "su", "સે": "se", "સૈ": "sai", "સો": "so", "સૌ": "sau", "સં": "san", "સઃ": "sah", "સૅ": "se", "સૉ": "so",
+        "હ": "ha", "હા": "ha", "હિ": "hi", "હી": "hi", "હુ": "hu", "હૂ": "hu", "હે": "he", "હૈ": "hai", "હો": "ho", "હૌ": "hau", "હં": "han", "હઃ": "hah", "હૅ": "he", "હૉ": "ho",
+        "ળ": "la", "ળા": "la", "ળિ": "li", "ળી": "li", "ળુ": "lu", "ળૂ": "lu", "ળે": "le", "ળૈ": "lai", "ળો": "lo", "ળૌ": "lau", "ળં": "lan", "ળઃ": "lah", "ળૅ": "le", "ળૉ": "lo",
+        "ક્ષ": "ksh", "ક્ષા": "ksha", "ક્ષિ": "kshi", "ક્ષી": "kshi", "ક્ષુ": "kshu", "ક્ષૂ": "kshu", "ક્ષે": "kshe", "ક્ષૈ": "kshai", "ક્ષો": "ksho", "ક્ષૌ": "kshau", "ક્ષં": "kshan", "ક્ષઃ": "kshah", "ક્ષૅ": "kshe", "ક્ષૉ": "ksho",
+        "જ્ઞ": "gya", "જ્ઞા": "gya", "જ્ઞિ": "gyi", "જ્ઞી": "gyi", "જ્ઞુ": "gyu", "જ્ઞૂ": "gyu", "જ્ઞે": "gye", "જ્ઞૈ": "gyai", "જ્ઞો": "gyo", "જ્ઞૌ": "gyau", "જ્ઞં": "gyan", "જ્ઞઃ": "gyah", "જ્ઞૅ": "gye", "જ્ઞૉ": "gyo",
+        "અ": "a", "આ": "aa", "ઇ": "i", "ઈ": "i", "ઉ": "u", "ઊ": "u", "ઋ": "ru", "ૠ": "ru", "એ": "ae", "ઐ": "ai", "ઓ": "o", "ઔ": "au",
+        "ા": "a", "િ": "i", "ી": "i", "ુ": "u", "ૂ": "u", "ૃ": "ru", "ૄ": "ru", "ૅ": "e", "ે": "e", "ૈ": "ai", "ૉ": "o", "ો": "o", "ૌ": "au", "્": "", "ઁ": "n", "ં": "n", "ઃ": ":",
+        "૦": "", "ૐ": "om", "શ્રી": "shree",
+        "ક્": "k", "ખ્": "kh", "ગ્": "g", "ઘ્": "gh", "ઙ્": "ng", "ચ્": "ch", "છ્": "chh", "જ્": "j", "ઝ્": "jh", "ઞ્": "ny", "ઞ": "gy", "ટ્": "d", "ઠ્": "dh", "ડ્": "d", "ઢ્": "dh", "ણ્": "n", "ત્": "t", "થ્": "th", "દ્": "d", "ધ્": "dh", "ન્": "n", "પ્": "p", "ફ્": "ph", "બ્": "b", "ભ્": "bh", "મ્": "m", "ય્": "y", "ર્": "r", "લ્": "l", "વ્": "v", "શ્": "sh", "ષ્": "sh", "સ્": "s", "હ્": "h", "ળ્": "l", "ક્ષ્": "ksh", "જ્ઞ્": "g",
+      };
+      const lastCharacters = ["ક", "ખ", "ગ", "ઘ", "ઙ", "ચ", "છ", "જ", "ઝ", "ઞ", "ટ", "ઠ", "ડ", "ઢ", "ણ", "ત", "થ", "દ", "ધ", "ન", "પ", "ફ", "બ", "ભ", "મ", "ય", "ર", "લ", "વ", "શ", "ષ", "સ", "હ"];
+      const middleChar = ["ૃ", "ૄ", "ૅ", "ે", "ૈ", "ૉ", "ો", "ૌ", "્", "ઁ", "ઃ"];
+
+      const sulekhToGujUnicodeConverter = (data) => {
+        let array_one = new Array(
+          "oe", "œ", "wâ", "Ø", "wí", "Øë", "wî", "Øì", "wo", "Øe", "wO", "ØE", "wâý", "Øý", "wâô", "Øô", "tâ", "È", "tí", "Èë", "tî", "Èì", "to", "Èe", "tO", "ÈE", "tâý", "Èý", "tâô", "Èô", "Tâ", "É", "Tí", "Éë", "Tî", "Éì", "To", "Ée", "TO", "ÉE", "Tâý", "Éý", "Tâô", "Éô", "yâ", "Ò", "yí", "Òë", "yî", "Òì", "yo", "Òe", "yO", "ÒE", "yâý", "Òý", "yâô", "Òô", "pâ", "Í", "pí", "Íë", "pî", "Íì", "po", "Íe", "pO", "ÍE", "pâý", "Íý", "pâô", "Íô", "sâ", "Ö", "sí", "Öë", "sî", "Öì", "so", "Öe", "sO", "ÖE", "sâý", "Öý", "sâô", "Öô", "Sâ", "×", "Sí", "×ë", "Sî", "×ì", "So", "×e", "SO", "×E", "Sâý", "×ý", "Sâô", "×ô", "Dâ", "Ë", "Dí", "Ëë", "Dî", "Ëì", "Do", "Ëe", "DO", "ËE", "Dâý", "Ëý", "Dâô", "Ëô", "gâ", "½", "gí", "½ë", "gî", "½ì", "go", "½e", "gO", "½E", "gâý", "½ý", "gâô", "½ô", "Gâ", "¾", "Gí", "¾ë", "Gî", "¾ì", "Go", "¾e", "GO", "¾E", "Gâý", "¾ý", "Gâô", "¾ô", "Kâ", "¼", "Kí", "¼ë", "Kî", "¼ì", "Ko", "¼e", "KO", "¼E", "Kâý", "¼ý", "Kâô", "¼ô", "lâ", "Ô", "lí", "Ôë", "lî", "Ôì", "lo", "Ôe", "lO", "ÔE", "lâý", "Ôý", "lâô", "Ôô", "xâ", "Ü", "xí", "Üë", "xî", "Üì", "xo", "Üe", "xO", "ÜE", "xâý", "Üý", "xâô", "Üô", "câ", "¿", "cí", "¿ë", "cî", "¿ì", "co", "¿e", "cO", "¿E", "câý", "¿ý", "câô", "¿ô", "vâ", "Õ", "ví", "Õë", "vî", "Õì", "vo", "Õe", "vO", "ÕE", "vâý", "Õý", "vâô", "Õô", "bâ", "Ï", "bí", "Ïë", "bî", "Ïì", "bo", "Ïe", "bO", "ÏE", "bâý", "Ïý", "bâô", "Ïô", "Bâ", "Ð", "Bí", "Ðë", "Bî", "Ðì", "Bo", "Ðe", "BO", "ÐE", "Bâý", "Ðý", "Bâô", "Ðô", "nâ", "Ì", "ní", "Ìë", "nî", "Ìì", "no", "Ìe", "nO", "ÌE", "nâý", "Ìý", "nâô", "Ìô", "Nâ", "Ç", "Ní", "Çë", "Nî", "Çì", "No", "Çe", "NO", "ÇE", "Nâý", "Çý", "Nâô", "Çô", "mâ", "Ñ", "mí", "Ñë", "mî", "Ñì", "mo", "Ñe", "mO", "ÑE", "mâý", "Ñý", "mâô", "Ñô",
+          "A", "ૐ", "áí", "ઓ", "áî", "ઔ", "áë", "એ", "á&", "ઍ", "áì", "ઐ", "á&", "ઍ", "çý", "ýç", "áâ&", "ઑ", "áâ", "આ", "á", "અ", "å", "ઇ", "æ", "ઈ", "é", "ઉ", "ê", "ઊ", "°", "ઋ", "Âý", "ઝ્ર", "WÕ", "શ્વ", "ƒ", "ન્ન", "š", "ઈં", "™", "ઇં", "ø", "ઉં", ";", "", "ù", "ઊં", "ïý", "ýï", "ëý", "ýë", "xâ", "ક્ષ", "Ü", "ક્ષ", "Ý", "ત્ર", "Þ", "જ્ઞ", "Q", "ઠ્ઠ", "x", "ક્ષ્", "X", "ત્ર્", "Þz", "જ્ઞ્", "ß", "્રુ", "à", "્રૂ", "¦", "દૃ", "±", "ૠ", "’ë", "જો", "Êz", "દ્‌", "q", "ટ્ટ", "V", "ટ્ઠ", "f", "ડ્ડ", "f", "ડ્ડ", "tÌ", "ત્ન", "F", "ઢ્ઢ", "¤", "હ્લ", "²", "ડ્ઢ", "²", "ડ્ઢ", "ÚzÌ", "હ્ન", "ÚzÌ", "હ્ન", "SÌ", "શ્ન", "ƒz", "ન્ન્", "S¿", "શ્ચ", "az»", "ઙ્ક", "az¼", "ઙ્ખ", "az½", "ઙ્ગ", "az¾", "ઙ્ઘ", "Öýz", "સ્ર્", "¢", "હ્મ", "{", "હ્ન", "ñ", ";", "‚", "્ન", "H", "હ્વ", "d", "દ્રુ", "Êz¾", "દ્ઘ", "©", "દ્બ", "ÊzÐ", "દ્ભ", "M", "દ્મ", "]", "દ્વ", "Êz½", "દ્ગ", "}", "દ્ધ", "¨", "દ્ર", "Í‚", "પ્ન", "Íý", "પ્ર", "`â", "જ્રા", "`", "જ્ર", "‘", "જી", "tí", "તે", "k", "ક્", "n", "ન્", "’", "જા", "[z", "હ્ય્", "[z", "હ્ય્", "kÌ", "ક્ન", "®", "ક્ર", "<", "ફ્ર", "Îz", "ફ્", "Çç", "ણુ", "Çè", "ણૂ", "Îç", "ફુ", "Îè", "ફૂ", "S", "શ્", "sÝz", "સ્ત્ર્", "^â", "ત્ત", "^", "ત્ત્", "Ù", "શ્ર", "wÃ", "ષ્ટ", "wÄ", "ષ્ઠ", "W", "શ્ર્", "—", "શ્ન", "ØzÃ", "ષ્ટ", "ØzÄ", "ષ્ઠ", "@", "શ્ચ", "WÕ", "શ્વ", "œ", "શ્વ", "sn", "સ્ન્", "§", "દ્દ", "¥", "ય", "r", "રુ", "R", "રૂ", "#", "રૂ", "_", "હૃ", ">", "ક્ક", "Y", "દ્ય", "~", "જ્જ", "K", "ખ્", "g", "ગ્", "G", "ઘ્", "Â", "ઝ", "c", "ચ્", "j", "જ્", "J", "ઝ્", ":â", "ઞ", ":", "ઞ્", "N", "ણ્", "t", "ત્", "T", "થ્", "D", "ધ્", "n", "ન્", "p", "પ્", "Î", "ફ", "b", "બ્", "B", "ભ્", "m", "મ્", "y", "ય્", "l", "લ્", "v", "વ્", "S", "શ્", "s", "સ્", "w", "ષ્", "h", "હ્", "L", "ળ્", "u", "ુ", "Î", "ફ઼", "»", "ક", "¡", "હ્ર", "¼", "ખ", "½", "ગ", "a", "ઙ", "¿", "ચ", "À", "છ", "Á", "જ", "Â", "ઝ", "Ã", "ટ", "Ä", "ઠ", "Å", "ડ", "Æ", "ઢ", "Ç", "ણ", "È", "ત", "É", "થ", "Ê", "દ", "Ë", "ધ", "Ì", "ન", "¾", "ઘ", "[", "હ્ય", "Í", "પ", "Î", "ફ", "Ï", "બ", "Ð", "ભ", "Ñ", "મ", "Ò", "ય", "ó", "।", "Ó", "ર", "Ô", "લ", "Õ", "વ", "×", "શ", "Ø", "ષ", "Ö", "સ", "Ú", "હ", "Û", "ળ", "÷", "્ર", "O", "ૌં", "P", "ફ્", "U", "ૂ", "«", "÷", "?", "x", "ú", "ૅ", "&", "ૅ", "|", "þં", "¬", "?", "“ö", "ëૃ", "âì", "ૌ", "âë", "ો", "ä", "ી", "î", "ૌ", "ë", "ે", "ì", "ૈ", "o", "ોં", "í", "ો", "î", "ૌ", "ë", "ૅ", "â", "ા", "ð", ":", "*", "ã", "I", "ીં", "ä", "ી", "ç", "ુ", "è", "ૂ", "ç", "ુ", "è", "ૂ", "ç", "ુ", "è", "ૂ", "ç", "ુ", "è", "ૂ", "ö", "ૃ", "ö", "ૃ", "ë", "ે", "ì", "ૈ", "ë", "ે", "ì", "ૈ", "û", "ઁ", "û", "ઁ", "ï", "ં", "ð", "ઃ", "z", "્", "E", "ૈં", "e", "ેં", "e", "ૅં", "d", "।", '"', "‘", "'", "’", "0", "૦", "1", "૧", "2", "૨", "3", "૩", "4", "૪", "5", "૫", "6", "૬", "7", "૭", "8", "૮", "9", "૯"
+        );
+        let array_one_length = array_one.length;
+        let modified_substring = data;
+        for (let input_symbol_idx = 0; input_symbol_idx < array_one_length - 1; input_symbol_idx = input_symbol_idx + 2) {
+            let idx = 0;
+            while (idx != -1) {
+            modified_substring = modified_substring.replace(array_one[input_symbol_idx], array_one[input_symbol_idx + 1]);
+            idx = modified_substring.indexOf(array_one[input_symbol_idx]);
+            }
+        }
+        modified_substring = modified_substring.replace(/ý/g, "્ર");
+        modified_substring = modified_substring.replace(/\u005C/g, "ંર્ã");
+        modified_substring = modified_substring.replace(/ü/g, "ર્ã");
+        modified_substring = modified_substring.replace(/([ãi*])([કખગઘઙચછજઝઞટઠડઢણતથદધનપફબભમયરલવશષસહળ])/g, "$2$1");
+        modified_substring = modified_substring.replace(/([ãi*])(્)([કખગઘઙચછજઝઞટઠડઢણતથદધનપફબભમયરલવશષસહળ])/g, "$2$3$1");
+        modified_substring = modified_substring.replace(/([ãi*])(્)([કખગઘઙચછજઝઞટઠડઢણતથદધનપફબભમયરલવશષસહળ])/g, "$2$3$1");
+        modified_substring = modified_substring.replace(/ã/g, "િ");
+        modified_substring = modified_substring.replace(/i/g, "િં");
+        modified_substring = modified_substring.replace(/þ/g, "ôી");
+        modified_substring = modified_substring.replace(/õ/g, "ંô");
+        modified_substring = modified_substring.replace(/([કખગઘઙચછજઝઞટઠડઢણતથદધનપફબભમયરલવશષસહળ])([ાિીુૂૃેૈોૌંઁૅૉ઼]*)([ô])/g, "$3$1$2");
+        modified_substring = modified_substring.replace(/([કખગ��ઙચછજઝઞટઠડઢણતથદધનપફબભમયરલવશષસહળ])([્])([ô])/g, "$3$1$2");
+        modified_substring = modified_substring.replace(/([કખગઘઙચછજઝઞટઠડઢણતથદધનપફબભમયરલવશષસહળ])([્])([ô])/g, "$3$1$2");
+        modified_substring = modified_substring.replace(/ô/g, "ર્");
+        modified_substring = modified_substring.replace(/([ંઁ॰])([ાિીુૂૃેૈોૌૅૉ])/g, "$2$1");
+        modified_substring = modified_substring.replace(/([ાિીુૂૃેૈોૌૅૉઁ])([ાિીુૂૃેૈોૌૅૉ])/g, "$1");
+        return modified_substring;
+      };
+
+      const gujUnicodeToSulekh = (data) => {
+        let array_one = new Array(
+        "ૐ", "A", "ઈં", "š", "ઇં", "™", "ઉં", "ø", "ઊં", "ù", "અ", "á", "આ", "áâ", "ઇ", "å", "ઈ", "æ", "ઉ", "é", "ઊ", "ê", "ઋ", "°", "ઝ્ર", "Â", "ઌ", "", "એ", "áë", "ઐ", "áì", "ઓ", "áí", "ઔ", "áî", "ઍ", "á&", "ઑ", "áâ&", "ર્ં", "õ", "ઠ્ઠ", "Q", "\u2018", "\"", "\u2019", "'", ";", "ñ", "", ";", "સ્ત્ર્", "sÝz", "સ્ત્ર", "sÝ", "શ્ર્", "W", "ક્ષ", "Ü", "ક્ષ્", "x", "ત્ર્", "X", "જ્ઞ્", "Þz", "ત્ર", "Ý", "જ્ઞ", "Þ", "હ્લ", "¤", "ટ્રુ", "Ã÷ç", "ટ્રૂ", "Ã÷è", "ટ્ર", "Ã÷", "ડ્રુ", "Å÷ç", "ડ્રૂ", "Å÷è", "ડ્ર", "Å÷", "જ્રુ", "`ç", "જ્રૂ", "`è", "જ્રા", "`â", "જ્ર", "`", "સ્ર્", "Öýz", "સ્ર", "Öý", "પ્ર", "Íý", "દ્ર", "¨", "શ્ર્વ", "œ", "શ્ર", "Ù", "ક્ર", "®", "ફ્ર", "<", "હ્ર", "¡", "જ્જ", "~", "્ર", "ý", "ક્ન", "kÌ", "ટ્ટ", "q", "ટ્ઠ", "V", "ડ્ડ", "f", "ડ્ડ", "f", "ત્ન", "tÌ", "ઢ્ઢ", "F", "", "¤", "ડ્ઢ", "²", "હ્ય્", "[z", "હ્ય", "[", "શ્ન", "SÌ", "શ્ર્ન", "—", "ઙ્ક", "az»", "ઙ્ખ", "az¼", "ઙ્ગ", "az½", "ઙ્ઘ", "az¾", "હ્ણ", "ÚzÇ", "હ્મ", "¢", "હ્ન", "{", "હ્વ", "H", "દ્રુ", "d", "દ્ઘ", "Êz¾", "દ્બ", "©", "દ્ભ", "ÊzÐ", "દ્મ", "M", "દ્વ", "]", "દ્ગ", "Êz½", "દ્ધ", "}", "ન્ન્", "ƒz", "ન્ન", "ƒ", "પ્ત", "pÈ", "પ્ન", "Í‚", "જી", "‘", "જા", "’", "ત્ત્", "^", "ત્ત", "^â", "ષ્ટ", "wÃ", "ષ્ઠ", "wÄ", "ષ્ટ", "ØzÃ", "ષ્ઠ", "ØzÄ", "શ્ચ", "@", "શ્વ", "œ", "સ્ન્", "sn", "સ્ન", "sÌ", "દ્દ", "§", "હૃ", "_", "ક્ક", ">", "દ્ય", "Y", "ક્", "k", "ખ્", "K", "ગ્", "g", "ઘ્", "G", "ઝ઼", "Â", "ચ્", "c", "જ્", "j", "ણ્", "N", "ત્", "t", "થ્", "T", "ધ્", "D", "ન્", "n", "પ્", "p", "ફ્", "Îz", "બ્", "b", "ભ્", "B", "મ્", "m", "ય્", "y", "લ્", "l", "વ્", "v", "શ્", "S", "સ્", "s", "ષ્", "w", "હ્", "h", "ળ્", "L", "ણુ", "Çç", "ણૂ", "Çè", "ફુ", "Îç", "ફૂ", "Îè", "રુ", "r", "રૂ", "#", "રૂ", "R", "દૃ", "¦", "ફ઼", "Î", "ક", "»", "ખ", "¼", "ગ", "½", "ઘ", "¾", "ઙ", "a", "ચ", "¿", "છ", "À", "જ", "Á", "ઝ્", "J", "ઝ", "Â", "ઞ", ":â", "ટ", "Ã", "ઠ", "Ä", "ડ", "Å", "ઢ", "Æ", "ણ", "Ç", "ત", "È", "થ", "É", "દ", "Ê", "ધ", "Ë", "ન", "Ì", "પ", "Í", "ફ", "Î", "બ", "Ï", "ભ", "Ð", "મ", "Ñ", "ય", "Ò", "।", "ó", "ર", "Ó", "લ", "Ô", "વ", "Õ", "શ", "×", "ષ", "Ø", "સ", "Ö", "હ", "Ú", "ળ", "Û", "઼", "", "ૈં", "E", "ેં", "e", "ૅં", "e", "ા", "â", "ૅ", "ë", "ૉ", "í", "ીં", "I", "ી", "ä", "ુ", "ç", "ૂ", "è", "ૃ", "ö", "ે", "ë", "ૈ", "ì", "ો", "í", "ૌ", "î", "?", "¬", "ઁ", "û", "ોં", "o", "ં", "ï", "ઃ", "ð", "્", "z", "ëm", "“m", "x", "?", "।", "d", "ૠ", "±", "÷", "«", ":", "ð", "૦", "0", "૧", "1", "૨", "2", "૩", "3", "૪", "4", "૫", "5", "૬", "6", "૭", "7", "૮", "8", "૯", "9"
+        );
+        let modified_substring = data;
+        if (modified_substring !== "") {
+            modified_substring = modified_substring.replace(/;/g, "ñ").replace(/ત્ર્/g, "X").replace(/ક્ષ્/g, "x").replace(/શ્ર્ન/g, "—").replace(/શ્ર્/g, "W").replace(/ર્/g, "ô");
+            modified_substring = modified_substring.replace(/X/g, "ત્ર્").replace(/x/g, "ક્ષ્").replace(/િં/g, "i").replace(/િ/g, "ã");
+            modified_substring = modified_substring.replace(/ô([કખગઘઙચછજ���ઞટઠડઢણતથદધનપફબભમયરલવશષસહળ])([્])/g, "$1$2ô");
+            modified_substring = modified_substring.replace(/ô([કખગઘઙચછજઝઞટઠડઢણતથદધનપફબભમયરલવશષસહળ])([ાીુૂૃેૈોૌંઁૅૉ઼]*)/g, "$1$2ô");
+            modified_substring = modified_substring.replace(/ીô/g, "þ").replace(/ંô/g, "õ").replace(/ôã/g, "ãô").replace(/ôi/g, "ãõ");
+            modified_substring = modified_substring.replace(/([કખગઘઙચછજઝઞટઠડઢણતથદધનપફબભમયરલવશષસહળ])([iã])/g, "$2$1");
+            modified_substring = modified_substring.replace(/([કખગઘઙચછજઝઞટઠડઢણતથદધનપફબભમયરલવશષસહળ])(્)([*iã])/g, "$3$1$2");
+            modified_substring = modified_substring.replace(/[્]([ \,\;\.।\n\-\:])/g, "z$1");
+            for (let input_symbol_idx = 0; input_symbol_idx < array_one.length - 1; input_symbol_idx = input_symbol_idx + 2) {
+              let idx = 0;
+              while (idx !== -1) {
+                modified_substring = modified_substring.replace(array_one[input_symbol_idx], array_one[input_symbol_idx + 1]);
+                idx = modified_substring.indexOf(array_one[input_symbol_idx]);
+              }
+            }
+        }
+        return modified_substring;
+      };
+
+      const gujUnicodeToEnglish = (data) => {
+        let transliteratedText = "";
+        for (let i = 0; i < data.length; ) {
+          let isLastChar = data[i - 1];
+          let currentChar = data[i];
+          let nextChar = data[i + 1];
+          let secondNextChar = data[i + 2];
+          if ((currentChar === "." && nextChar === "." && secondNextChar === ".") || currentChar === "ઞ") {
+            transliteratedText = transliteratedText.slice(0, -1);
+          }
+          let combination = currentChar + nextChar;
+          if (combination in SelfGujaratiToEnglishMap) {
+            transliteratedText += SelfGujaratiToEnglishMap[combination];
+            i += 2;
+          } else if (currentChar in SelfGujaratiToEnglishMap) {
+            transliteratedText += SelfGujaratiToEnglishMap[currentChar];
+            i += 1;
+          } else {
+            transliteratedText += currentChar;
+            i += 1;
+          }
+          if (lastCharacters.includes(currentChar) && (nextChar === " " || nextChar === ",")) {
+            transliteratedText = transliteratedText.slice(0, -1);
+          }
+          if (middleChar.includes(currentChar)) {
+            transliteratedText = transliteratedText.slice(0, -1);
+          }
+        }
+        return transliteratedText;
+      };
+
+      const gujUnicodeToHindi = (data) => {
+        const Lipi = ["ક", "क", "ખ", "ख", "ગ", "ग", "ઘ", "घ", "ઙ", "ङ", "ચ", "च", "છ", "छ", "જ", "ज", "ઝ", "झ", "ઞ", "ञ", "ટ", "ट", "ઠ", "ठ", "ડ", "ड", "ઢ", "ढ", "ણ", "ण", "ત", "त", "થ", "थ", "દ", "द", "ધ", "ध", "ન", "न", "પ", "प", "ફ", "फ", "બ", "ब", "ભ", "भ", "મ", "म", "ય", "य", "ર", "र", "લ", "ल", "વ", "व", "શ", "श", "ષ", "ष", "સ", "स", "હ", "ह", "ળ", "ळ", "ક્ષ", "क्ष", "જ્ઞ", "ज्ञ", "્", "्", "ા", "ा", "િ", "ि", "ી", "ी", "ુ", "ु", "ૂ", "ू", "ૃ", "ृ", "ે", "े", "ૈ", "ै", "ો", "ो", "ૌ", "ौ", "ૅ", "ॉ", "ૉ", "ॉ", "ં", "ं", "ઃ", "ः", "ઁ", "ँ", "ઽ", "ऽ", "અ", "अ", "આ", "आ", "ઇ", "इ", "ઈ", "ई", "ઉ", "उ", "ઊ", "ऊ", "ઋ", "ऋ", "એ", "ए", "ઐ", "ऐ", "ઓ", "ओ", "ઔ", "औ", "ઍ", "ऍ", "ઑ", "ऑ", "૦", "०", "૧", "१", "૨", "૨", "૩", "૩", "૪", "૪", "૫", "५", "૬", "६", "૭", "૭", "૮", "૮", "૯", "९"];
+        for (let i = 0; i < Lipi.length; i += 2) {
+            data = data.replace(new RegExp(Lipi[i], "g"), Lipi[i + 1]);
+        }
+        return data;
+      };
+
+      const hindiUnicodeToGujUnicode = (data) => {
+        const Lipi = ["ક", "क", "ખ", "ख", "ગ", "ग", "ઘ", "घ", "ઙ", "ङ", "ચ", "च", "છ", "छ", "જ", "ज", "ઝ", "झ", "ઞ", "ञ", "ટ", "ट", "ઠ", "ठ", "ડ", "ड", "ઢ", "ढ", "ણ", "ण", "ત", "त", "થ", "थ", "દ", "द", "ધ", "ध", "ન", "न", "પ", "प", "ફ", "फ", "બ", "ब", "ભ", "भ", "મ", "म", "ય", "य", "ર", "र", "લ", "ल", "વ", "व", "શ", "श", "ષ", "ष", "સ", "स", "હ", "ह", "ળ", "ळ", "ક્ષ", "क्ष", "જ્ઞ", "ज्ञ", "્", "्", "ા", "ा", "િ", "ि", "ી", "ी", "ુ", "ु", "ૂ", "ू", "ૃ", "ृ", "ે", "े", "ૈ", "ै", "ો", "ो", "ૌ", "ौ", "ૅ", "ॉ", "ૉ", "ॉ", "ં", "ं", "ઃ", "ः", "ઁ", "ँ", "ઽ", "ऽ", "અ", "अ", "આ", "आ", "ઇ", "इ", "ઈ", "ई", "ઉ", "उ", "ઊ", "ऊ", "ઋ", "ऋ", "એ", "ए", "ઐ", "ऐ", "ઓ", "ओ", "ઔ", "औ", "ઍ", "ऍ", "ઑ", "ऑ", "૦", "०", "૧", "१", "૨", "૨", "૩", "૩", "૪", "૪", "૫", "५", "૬", "६", "૭", "૭", "૮", "૮", "૯", "९"];
+        for (let i = 1; i < Lipi.length; i += 2) {
+            data = data.replace(new RegExp(Lipi[i], "g"), Lipi[i - 1]);
+        }
+        return data;
+      };
+
+      const handleUnicodeInput = () => {
+        const unicodeText = unicodeTextEl.value;
+        sulekhTextEl.value = gujUnicodeToSulekh(unicodeText);
+        hindiUnicodeEl.value = gujUnicodeToHindi(unicodeText);
+        englishTextEl.value = gujUnicodeToEnglish(unicodeText);
+      };
+
+      const handleSulekhInput = () => {
+        const sulekhText = sulekhTextEl.value;
+        const unicodeText = sulekhToGujUnicodeConverter(sulekhText);
+        unicodeTextEl.value = unicodeText;
+        hindiUnicodeEl.value = gujUnicodeToHindi(unicodeText);
+        englishTextEl.value = gujUnicodeToEnglish(unicodeText);
+      };
+
+      const handleHindiInput = () => {
+        const hindiText = hindiUnicodeEl.value;
+        const unicodeText = hindiUnicodeToGujUnicode(hindiText);
+        unicodeTextEl.value = unicodeText;
+        sulekhTextEl.value = gujUnicodeToSulekh(unicodeText);
+        englishTextEl.value = gujUnicodeToEnglish(unicodeText);
+      };
+
+      unicodeTextEl.addEventListener("input", handleUnicodeInput);
+      sulekhTextEl.addEventListener("input", handleSulekhInput);
+      hindiUnicodeEl.addEventListener("input", handleHindiInput);
+
+      unicodeTextEl.addEventListener("paste", () => setTimeout(handleUnicodeInput, 0));
+      sulekhTextEl.addEventListener("paste", () => setTimeout(handleSulekhInput, 0));
+      hindiUnicodeEl.addEventListener("paste", () => setTimeout(handleHindiInput, 0));
+    </script>
+  </body>
+</html>

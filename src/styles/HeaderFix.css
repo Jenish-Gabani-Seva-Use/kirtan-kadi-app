@@ -1,0 +1,240 @@
+/* Complete Header Fix - Override all conflicting styles */
+
+/* Reset and force proper layout */
+.app-header {
+  display: flex !important;
+  flex-direction: row !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  padding: 15px 25px !important;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+  color: white !important;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1) !important;
+  position: relative !important;
+  z-index: 9999 !important;
+  min-height: 60px !important;
+  width: 100% !important;
+  flex-wrap: nowrap !important;
+}
+
+/* Force header sections to stay in row */
+.header-left {
+  display: flex !important;
+  align-items: center !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  flex: 0 0 auto !important;
+  width: auto !important;
+  min-width: fit-content !important;
+}
+
+.header-left h1 {
+  margin: 0 !important;
+  font-size: 1.5rem !important;
+  font-weight: 600 !important;
+  white-space: nowrap !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  display: block !important;
+}
+
+.header-center {
+  flex: 0 0 auto !important;
+  margin: 0 20px !important;
+  display: flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  width: auto !important;
+  max-width: 300px !important;
+}
+
+.header-search-bar {
+  display: flex !important;
+  align-items: center !important;
+  background: rgba(255, 255, 255, 0.2) !important;
+  border-radius: 25px !important;
+  padding: 8px 20px !important;
+  cursor: pointer !important;
+  transition: all 0.3s !important;
+  min-width: 200px !important;
+  max-width: 300px !important;
+  width: 100% !important;
+}
+
+.header-search-bar:hover {
+  background: rgba(255, 255, 255, 0.3) !important;
+}
+
+.header-search-bar i {
+  margin-right: 10px !important;
+  color: white !important;
+  display: inline-block !important;
+}
+
+.header-search-bar input {
+  background: none !important;
+  border: none !important;
+  color: white !important;
+  outline: none !important;
+  width: 100% !important;
+  font-size: 14px !important;
+  cursor: pointer !important;
+  display: block !important;
+}
+
+.header-search-bar input::placeholder {
+  color: rgba(255, 255, 255, 0.8) !important;
+}
+
+/* Force header-right to be visible and properly positioned */
+.header-right {
+  display: flex !important;
+  gap: 10px !important;
+  flex-wrap: wrap !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  z-index: 10000 !important;
+  position: relative !important;
+  flex: 0 0 auto !important;
+  width: auto !important;
+  max-width: none !important;
+  margin-left: auto !important;
+  justify-content: flex-end !important;
+  align-items: center !important;
+}
+
+/* Force buttons to be visible */
+.header-button {
+  padding: 8px 15px !important;
+  background: rgba(255, 255, 255, 0.1) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  border-radius: 6px !important;
+  color: white !important;
+  cursor: pointer !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  transition: all 0.3s !important;
+  font-size: 0.9rem !important;
+  text-decoration: none !important;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
+  white-space: nowrap !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  position: relative !important;
+  z-index: 10001 !important;
+  flex: 0 0 auto !important;
+  width: auto !important;
+  min-width: fit-content !important;
+}
+
+.header-button:hover {
+  background: rgba(255, 255, 255, 0.2) !important;
+  transform: translateY(-2px) !important;
+}
+
+.header-button i {
+  font-size: 1rem !important;
+  display: inline-block !important;
+}
+
+.header-button.add-kirtan {
+  background: rgba(76, 175, 80, 0.2) !important;
+  border-color: rgba(76, 175, 80, 0.3) !important;
+}
+
+.header-button.add-kirtan:hover {
+  background: rgba(76, 175, 80, 0.3) !important;
+}
+
+.header-button.import-button {
+  background: rgba(33, 150, 243, 0.2) !important;
+  border-color: rgba(33, 150, 243, 0.3) !important;
+}
+
+.header-button.import-button:hover {
+  background: rgba(33, 150, 243, 0.3) !important;
+}
+
+.logout-button {
+  background: rgba(255, 0, 0, 0.2) !important;
+  border-color: rgba(255, 0, 0, 0.3) !important;
+}
+
+.logout-button:hover {
+  background: rgba(255, 0, 0, 0.3) !important;
+}
+
+/* Override ALL media queries */
+@media all and (max-width: 9999px) {
+  .app-header {
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+  }
+  
+  .header-left,
+  .header-center,
+  .header-right {
+    width: auto !important;
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
+  
+  .header-right {
+    justify-content: flex-end !important;
+    flex-wrap: wrap !important;
+  }
+  
+  .header-button {
+    flex-grow: 0 !important;
+    width: auto !important;
+    display: inline-flex !important;
+  }
+}
+
+/* For smaller screens, allow wrapping but keep all visible */
+@media (max-width: 1200px) {
+  .app-header {
+    flex-wrap: wrap !important;
+    gap: 15px !important;
+  }
+  
+  .header-left {
+    flex: 0 0 100% !important;
+    justify-content: center !important;
+  }
+  
+  .header-center {
+    flex: 0 0 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    justify-content: center !important;
+  }
+  
+  .header-search-bar {
+    max-width: 500px !important;
+    width: 100% !important;
+  }
+  
+  .header-right {
+    flex: 0 0 100% !important;
+    justify-content: center !important;
+    gap: 8px !important;
+  }
+  
+  .header-button {
+    padding: 6px 12px !important;
+    font-size: 0.85rem !important;
+  }
+}
+
+/* Debug - Remove after testing */
+.header-right {
+  border: 2px solid lime !important;
+  min-height: 40px !important;
+}
+
+.header-button {
+  border: 2px solid yellow !important;
+}

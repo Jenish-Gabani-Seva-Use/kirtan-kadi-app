@@ -1,22 +1,83 @@
 .app-header {
-  display: flex;
+  display: flex !important;
   justify-content: space-between;
   align-items: center;
   padding: 15px 25px;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  position: relative;
+  z-index: 9999 !important;
+  min-height: 60px;
+  width: 100%;
+}
+
+.header-left {
+  display: flex !important;
+  align-items: center;
+  visibility: visible !important;
+  opacity: 1 !important;
 }
 
 .header-left h1 {
   margin: 0;
   font-size: 1.5rem;
   font-weight: 600;
+  white-space: nowrap;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+.header-center {
+  flex: 0 0 auto;
+  margin: 0 20px;
+  display: flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+.header-search-bar {
+  display: flex;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 25px;
+  padding: 8px 20px;
+  cursor: pointer;
+  transition: all 0.3s;
+  min-width: 250px;
+}
+
+.header-search-bar:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.header-search-bar i {
+  margin-right: 10px;
+  color: white;
+}
+
+.header-search-bar input {
+  background: none;
+  border: none;
+  color: white;
+  outline: none;
+  width: 100%;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.header-search-bar input::placeholder {
+  color: rgba(255, 255, 255, 0.8);
 }
 
 .header-right {
-  display: flex;
-  gap: 15px;
+  display: flex !important;
+  gap: 10px;
+  flex-wrap: wrap;
+  visibility: visible !important;
+  opacity: 1 !important;
+  z-index: 10000 !important;
+  position: relative;
 }
 
 .header-button {
@@ -24,13 +85,16 @@
   background: rgba(255, 255, 255, 0.1);
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 6px;
-  color: white;
+  color: white !important;
   cursor: pointer;
-  display: flex;
+  display: flex !important;
   align-items: center;
   gap: 8px;
   transition: all 0.3s;
   font-size: 0.9rem;
+  text-decoration: none;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  white-space: nowrap;
 }
 
 .header-button:hover {
@@ -40,6 +104,15 @@
 
 .header-button i {
   font-size: 1rem;
+}
+
+.header-button.add-kirtan {
+  background: rgba(76, 175, 80, 0.2);
+  border-color: rgba(76, 175, 80, 0.3);
+}
+
+.header-button.add-kirtan:hover {
+  background: rgba(76, 175, 80, 0.3);
 }
 
 .logout-button {

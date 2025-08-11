@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import Header from './components/Header';
+import Header from './components/HeaderClean';
 import TabBar from './components/TabBar';
 import LinesPanel from './components/LinesPanel';
 import SelectedLinesPanel from './components/SelectedLinesPanel';
@@ -8,6 +8,13 @@ import InputModal from './components/InputModal';
 import Login from './components/Login';
 import SettingsModal from './components/SettingModal';
 import VmixModal from './components/VmixModal';
+import KirtanEntryEnhanced from './components/KirtanEntryEnhanced';
+import DatabaseManager from './components/DatabaseManager';
+import KirtanSearch from './components/KirtanSearch';
+import PDFImport from './components/PDFImport';
+import PinModal from './components/PinModal';
+import kirtanDB from './utils/database';
+import { loadSampleData } from './utils/sampleData';
 import './styles/App.css';
 import {
   Routes,
@@ -33,10 +40,17 @@ function MainApp({ onLogout }) {
   const [inputModalOpen, setInputModalOpen] = useState(false);
   const [settingsModalOpen, setSettingsModalOpen] = useState(false);
   const [vmixModalOpen, setVmixModalOpen] = useState(false);
+  const [kirtanEntryOpen, setKirtanEntryOpen] = useState(false);
+  const [editingKirtan, setEditingKirtan] = useState(null);
+  const [kirtanSearchOpen, setKirtanSearchOpen] = useState(false);
+  const [databaseManagerOpen, setDatabaseManagerOpen] = useState(false);
+  const [pdfImportOpen, setPdfImportOpen] = useState(false);
   const [isInputPanelFocused, setIsInputPanelFocused] = useState(true);
   const [isDeleteMode, setIsDeleteMode] = useState(false);
   const [linesToDelete, setLinesToDelete] = useState([]);
   const [overlayActive, setOverlayActive] = useState(false);
+  const [pinModalOpen, setPinModalOpen] = useState(false);
+  const [pendingAction, setPendingAction] = useState(null);
 
   // Get current tab data
   const currentTab = tabs.find(tab => tab.id === activeTabId) || tabs[0];
@@ -322,12 +336,95 @@ const deleteSelectedLines = () => {
   }
 };
 
+// Handle kirtan selection from search
+const handleSelectKirtan = (kirtan) => {
+  // Create a new tab with the kirtan content
+  const newTab = {
+    id: nextTabId,
+    name: kirtan.sulekhTitle || kirtan.unicodeTitle || kirtan.englishTitle || `Kirtan ${nextTabId}`,
+    active: false,
+    data: {
+      allLines: kirtan.sulekhContent ? kirtan.sulekhContent.split('\n').filter(line => line.trim() !== '') : [],
+      selectedLines: [],
+      currentDisplayedText: kirtan.sulekhContent ? kirtan.sulekhContent.split('\n')[0] || '' : '',
+      selectedLineIndex: 0,
+      originalInputText: kirtan.sulekhContent || ''
+    }
+  };
+  
+  setTabs([...tabs, newTab]);
+  setActiveTabId(nextTabId);
+  setNextTabId(nextTabId + 1);
+};
+
+// Handle editing kirtan from search
+const handleEditKirtan = (kirtan) => {
+  setEditingKirtan(kirtan);
+  setKirtanEntryOpen(true);
+  setKirtanSearchOpen(false);
+};
+
+// Handle adding new kirtan
+const handleAddNewKirtan = () => {
+  setPendingAction('addKirtan');
+  setPinModalOpen(true);
+};
+
+// Handle PIN success
+const handlePinSuccess = () => {
+  setPinModalOpen(false);
+  
+  if (pendingAction === 'addKirtan') {
+    setEditingKirtan(null);
+    setKirtanEntryOpen(true);
+  } else if (pendingAction === 'database') {
+    setDatabaseManagerOpen(true);
+  } else if (pendingAction === 'import') {
+    setPdfImportOpen(true);
+  }
+  
+  setPendingAction(null);
+};
+
+// Handle protected actions
+const handleOpenDatabase = () => {
+  setPendingAction('database');
+  setPinModalOpen(true);
+};
+
+const handleOpenPDFImport = () => {
+  setPendingAction('import');
+  setPinModalOpen(true);
+};
+
+// Initialize database on component mount
+useEffect(() => {
+  const initDatabase = async () => {
+    try {
+      await kirtanDB.init();
+      // Load sample data if database is empty
+      const count = await loadSampleData(kirtanDB);
+      if (count > 0) {
+        console.log(`Loaded ${count} sample kirtans`);
+      }
+    } catch (error) {
+      console.error('Database initialization error:', error);
+    }
+  };
+  
+  initDatabase();
+}, []);
+
 return (
     <div className="app">
       <Header
         onOpenInputModal={() => setInputModalOpen(true)}
         onOpenSettingsModal={() => setSettingsModalOpen(true)}
         onOpenVmixModal={() => setVmixModalOpen(true)}
+        onOpenDatabase={handleOpenDatabase}
+        onOpenKirtanSearch={() => setKirtanSearchOpen(true)}
+        onAddNewKirtan={handleAddNewKirtan}
+        onOpenPDFImport={handleOpenPDFImport}
         onLogout={onLogout}
       />
 
@@ -388,6 +485,57 @@ return (
       onClose={() => setVmixModalOpen(false)}
       onSave={saveVmixSettings}
       settings={vmixSettings}
+    />
+
+    <KirtanEntryEnhanced
+      isOpen={kirtanEntryOpen}
+      editKirtan={editingKirtan}
+      onClose={(saved) => {
+        setKirtanEntryOpen(false);
+        setEditingKirtan(null);
+        // Refresh search if it's open
+        if (saved && kirtanSearchOpen) {
+          // Trigger refresh in KirtanSearch
+        }
+      }}
+    />
+
+    <KirtanSearch
+      isOpen={kirtanSearchOpen}
+      onClose={() => setKirtanSearchOpen(false)}
+      onSelectKirtan={handleSelectKirtan}
+      onEditKirtan={handleEditKirtan}
+    />
+
+    <DatabaseManager
+      isOpen={databaseManagerOpen}
+      onClose={() => setDatabaseManagerOpen(false)}
+    />
+
+    <PDFImport
+      isOpen={pdfImportOpen}
+      onClose={(saved) => {
+        setPdfImportOpen(false);
+        // Refresh search if needed
+        if (saved && kirtanSearchOpen) {
+          // Trigger refresh
+        }
+      }}
+    />
+
+    <PinModal
+      isOpen={pinModalOpen}
+      onClose={() => {
+        setPinModalOpen(false);
+        setPendingAction(null);
+      }}
+      onSuccess={handlePinSuccess}
+      title={
+        pendingAction === 'addKirtan' ? 'Enter PIN to Add Kirtan' :
+        pendingAction === 'database' ? 'Enter PIN to Access Database' :
+        pendingAction === 'import' ? 'Enter PIN to Import' :
+        'Enter PIN'
+      }
     />
   </div>
 );

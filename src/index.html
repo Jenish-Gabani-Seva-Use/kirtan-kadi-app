@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Converter</title>
+    <style>
+      @font-face {
+        font-family: 'Guj_Regular_SULEKH';
+        src: url('https://raw.githubusercontent.com/swarit-in/Sulekh-Regular-Font-Gujarati/main/Guj_Regular_SULEKH.ttf');
+      }
+      /* General styling for a clean, modern look */
+      :root {
+        --bg-color: #f3f4f6; /* Light gray background */
+        --container-bg: #ffffff; /* White container */
+        --text-color: #1f2937; /* Dark gray text */
+        --border-color: #e5e7eb; /* Light gray border */
+        --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      }
+      body {
+        background-color: var(--bg-color);
+        margin: 0;
+        padding: 0;
+        font-family: 'Inter', sans-serif;
+        color: var(--text-color);
+      }
+      .main {
+        max-width: 1280px;
+        margin: auto;
+        padding: 2rem;
+      }
+      .title {
+        margin-bottom: 2rem;
+        font-size: 2.5rem;
+        font-weight: 700;
+        text-align: center;
+        color: #312e81;
+      }
+      .main_container {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 2rem;
+      }
+      .box {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+        background-color: var(--container-bg);
+        padding: 2rem;
+        border-radius: 1rem;
+        box-shadow: var(--shadow);
+      }
+      .label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: var(--text-color);
+      }
+      .text_Area {
+        padding: 0.75rem;
+        border-radius: 0.75rem;
+        border: 2px solid var(--border-color);
+        width: 100%;
+        height: 12rem;
+        font-size: 1rem;
+        line-height: 1.5;
+        box-sizing: border-box;
+        resize: vertical;
+        transition: border-color 0.3s ease;
+      }
+      .text_Area:focus {
+        outline: none;
+        border-color: #4f46e5;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="main">
+      <h1 class="title">જય શ્રી સ્વામિનારાયણ</h1>
+      <div class="main_container">
+        
+        <!-- Gujarati Unicode Box -->
+        <div class="box">
+          <div>
+            <label for="unicodeText" class="label">ગુજરાતી ય��નિકોડ ટેક્સ્ટ</label>
+            <textarea id="unicodeText" class="text_Area" spellcheck="false" oninput="convertUnicodeToAll()"></textarea>
+          </div>
+        </div>
+        
+        <!-- Sulekh to Unicode Box -->
+        <div class="box">
+          <div>
+            <label for="sulekhText" class="label">સુલેખ ટેક્સ્ટ</label>
+            <textarea id="sulekhText" style="font-family: 'Guj_Regular_SULEKH'" class="text_Area" spellcheck="false" oninput="convertSulekhToUnicode()"></textarea>
+          </div>
+        </div>
+        
+        <!-- Hindi Unicode Output Box -->
+        <div class="box">
+          <div>
+            <label for="hindiUnicode" class="label">હિન્દી યુનિકોડ ટેક્સ્ટ</label>
+            <textarea id="hindiUnicode" class="text_Area" spellcheck="false" oninput="convertHindiToAll()"></textarea>
+          </div>
+        </div>
+        
+        <!-- English Transliteration Output Box -->
+        <div class="box">
+          <div>
+            <label for="englishText" class="label">અંગ્રેજી ટેક્સ્ટ</label>
+            <textarea id="englishText" class="text_Area" spellcheck="false" oninput="convertEnglishToAll()"></textarea>
+          </div>
+        </div>
+        
+      </div>
+    </div>
+
+    <script>
+      // The core mapping data for all conversions. This is the heart of the converter.
+      const mappings = {
+        gujaratiToEnglish: {
+          "૧": "1", "૨": "2", "૩": "3", "૪": "4", "૫": "5", "૬": "6", "૭": "7", "૮": "8", "૯": "9",
+          "ક": "ka", "કા": "kaa", "કિ": "ki", "કી": "kee", "કુ": "ku", "કૂ": "koo", "કે": "ke", "કૈ": "kai", "કો": "ko", "કૌ": "kau", "કં": "kan", "કઃ": "kah", "કૅ": "kae", "કૉ": "kao",
+          "ખ": "kha", "ખા": "khaa", "ખિ": "khi", "ખી": "khee", "ખુ": "khu", "ખૂ": "khooo", "ખે": "khe", "ખૈ": "khai", "ખો": "kho", "ખૌ": "khau", "ખં": "khan", "ખઃ": "khah", "ખૅ": "khae", "ખૉ": "khao",
+          "ગ": "ga", "ગા": "gaa", "ગિ": "gi", "ગી": "gee", "ગુ": "gu", "ગૂ": "goo", "ગે": "ge", "ગૈ": "gai", "ગો": "go", "ગૌ": "gau", "ગં": "gan", "ગઃ": "gah", "ગૅ": "gae", "ગૉ": "gao",
+          "ઘ": "gha", "ઘા": "ghaa", "ઘિ": "ghi", "ઘી": "ghee", "ઘુ": "ghu", "ઘૂ": "ghoo", "ઘે": "ghe", "ઘૈ": "ghai", "ઘો": "gho", "ઘૌ": "ghau", "ઘં": "ghan", "ઘઃ": "ghah", "ઘૅ": "ghae", "ઘૉ": "ghao",
+          "ચ": "cha", "ચા": "chaa", "ચિ": "chi", "ચી": "chee", "ચુ": "chu", "ચૂ": "choo", "ચે": "che", "ચૈ": "chai", "ચો": "cho", "ચૌ": "chau", "ચં": "chan", "ચઃ": "chah", "ચૅ": "chae", "ચૉ": "chao",
+          "છ": "chha", "છા": "chhaa", "છિ": "chhi", "છી": "chhee", "છુ": "chhu", "છૂ": "chhoo", "છે": "chhe", "છૈ": "chhai", "છો": "chho", "છૌ": "chhau", "છં": "chhan", "છઃ": "chhah", "છૅ": "chhae", "છૉ": "chhao",
+          "જ": "ja", "જા": "jaa", "જિ": "ji", "જી": "jee", "જુ": "ju", "જૂ": "joo", "જે": "je", "જૈ": "jai", "જો": "jo", "જૌ": "jau", "જં": "jan", "જઃ": "jah", "જૅ": "jae", "જૉ": "jao",
+          "ઝ": "jha", "ઝા": "jhaa", "ઝિ": "jhi", "ઝી": "jhee", "ઝુ": "jhu", "ઝૂ": "jhoo", "ઝે": "zhe", "ઝૈ": "zhai", "ઝો": "zho", "ઝૌ": "zhau", "ઝં": "zhan", "ઝઃ": "zhah", "ઝૅ": "zhae", "ઝૉ": "zhao",
+          "ટ": "ta", "ટા": "taa", "ટિ": "ti", "ટી": "tee", "ટુ": "tu", "ટૂ": "too", "ટે": "te", "ટૈ": "tai", "ટો": "to", "ટૌ": "tau", "ટં": "tan", "ટઃ": "tah", "ટૅ": "tae", "ટૉ": "tao",
+          "ઠ": "tha", "ઠા": "thaa", "ઠિ": "thi", "ઠી": "thee", "ઠુ": "thu", "ઠૂ": "thoo", "ઠે": "the", "ઠૈ": "thai", "ઠો": "tho", "ઠૌ": "thau", "ઠં": "than", "ઠઃ": "thah", "ઠૅ": "thae", "ઠૉ": "thao",
+          "ડ": "da", "ડા": "daa", "ડિ": "di", "ડી": "dee", "ડુ": "du", "ડૂ": "doo", "ડે": "de", "ડૈ": "dai", "ડો": "do", "ડૌ": "dau", "ડં": "dan", "ડઃ": "dah", "ડૅ": "dae", "ડૉ": "dao",
+          "ઢ": "dha", "ઢા": "dhaa", "ઢિ": "dhi", "ઢી": "dhee", "ઢુ": "dhu", "ઢૂ": "dhoo", "ઢે": "dhe", "ઢૈ": "dhai", "ઢો": "dho", "ઢૌ": "dhau", "ઢં": "dhan", "ઢઃ": "dhah", "ઢૅ": "dhae", "ઢૉ": "dhao",
+          "ણ": "na", "ણા": "naa", "ણિ": "ni", "ણી": "nee", "ણુ": "nu", "ણૂ": "noo", "ણે": "ne", "ણૈ": "nai", "ણો": "no", "ણૌ": "nau", "ણં": "nan", "ણઃ": "nah", "ણૅ": "nae", "ણૉ": "nao",
+          "ત": "ta", "તા": "taa", "તિ": "ti", "તી": "tee", "તુ": "tu", "તૂ": "too", "તે": "te", "તૈ": "tai", "તો": "to", "તૌ": "tau", "તં": "tan", "તઃ": "tah", "તૅ": "tae", "તૉ": "tao",
+          "થ": "tha", "થા": "thaa", "થિ": "thi", "થી": "thee", "થુ": "thu", "થૂ": "thoo", "થે": "the", "થૈ": "thai", "થો": "tho", "થૌ": "thau", "થં": "than", "થઃ": "thah", "થૅ": "thae", "થૉ": "thao",
+          "દ": "da", "દા": "daa", "દિ": "di", "દી": "dee", "દુ": "du", "દૂ": "doo", "દે": "de", "દૈ": "dai", "દો": "do", "દૌ": "dau", "દં": "dan", "દઃ": "dah", "દૅ": "dae", "દૉ": "dao",
+          "ધ": "dha", "ધા": "dhaa", "ધિ": "dhi", "ધી": "dhee", "ધુ": "dhu", "ધૂ": "dhoo", "ધે": "dhe", "ધૈ": "dhai", "ધો": "dho", "ધૌ": "dhau", "ધં": "dhan", "ધઃ": "dhah", "ધૅ": "dhae", "ધૉ": "dhao",
+          "ન": "na", "ના": "naa", "નિ": "ni", "ની": "nee", "નુ": "nu", "નૂ": "noo", "ને": "ne", "નૈ": "nai", "નો": "no", "નૌ": "nau", "નં": "nan", "નઃ": "nah", "નૅ": "nae", "નૉ": "nao",
+          "પ": "pa", "પા": "paa", "પિ": "pi", "પી": "pee", "પુ": "pu", "પૂ": "poo", "પે": "pe", "પૈ": "pai", "પો": "po", "પૌ": "pau", "પં": "pan", "પઃ": "pah", "પૅ": "pae", "પૉ": "pao",
+          "ફ": "fa", "ફા": "faa", "ફિ": "fi", "ફી": "fee", "ફુ": "fu", "ફૂ": "foo", "ફે": "fe", "ફૈ": "fai", "ફો": "fo", "ફૌ": "fau", "ફં": "fan", "ફઃ": "fah", "ફૅ": "fae", "ફૉ": "fao",
+          "બ": "ba", "બ���": "baa", "બિ": "bi", "બી": "bee", "બુ": "bu", "બૂ": "boo", "બે": "be", "બૈ": "bai", "બો": "bo", "બૌ": "bau", "બં": "ban", "બઃ": "bah", "બૅ": "bae", "બૉ": "bao",
+          "ભ": "bha", "ભા": "bhaa", "ભિ": "bhi", "ભી": "bhee", "ભુ": "bhu", "ભૂ": "bhoo", "ભે": "bhe", "ભૈ": "bhai", "ભો": "bho", "ભૌ": "bhau", "ભં": "bhan", "ભઃ": "bhah", "ભૅ": "bhae", "ભૉ": "bhao",
+          "મ": "ma", "મા": "maa", "મિ": "mi", "મી": "mee", "મુ": "mu", "મૂ": "moo", "મે": "me", "મૈ": "mai", "મો": "mo", "મૌ": "mau", "મં": "man", "મઃ": "mah", "મૅ": "mae", "મૉ": "mao",
+          "ય": "ya", "યા": "yaa", "યિ": "yi", "યી": "yee", "યુ": "yu", "યૂ": "yoo", "યે": "ye", "યૈ": "yai", "યો": "yo", "યૌ": "yau", "યં": "yan", "યઃ": "yah", "યૅ": "yae", "યૉ": "yao",
+          "ર": "ra", "રા": "raa", "રિ": "ri", "રી": "ree", "રુ": "ru", "રૂ": "roo", "રે": "re", "રૈ": "rai", "રો": "ro", "રૌ": "rau", "��ં": "ran", "રઃ": "rah", "રૅ": "rae", "રૉ": "rao",
+          "લ": "la", "લા": "laa", "લિ": "li", "લી": "lee", "લુ": "lu", "લૂ": "loo", "લે": "le", "લૈ": "lai", "લો": "lo", "લૌ": "lau", "લં": "lan", "લઃ": "lah", "લૅ": "lae", "લૉ": "lao",
+          "વ": "va", "વા": "vaa", "વિ": "vi", "વી": "vee", "વુ": "vu", "વૂ": "voo", "વે": "ve", "વૈ": "vai", "વો": "vo", "વૌ": "vau", "વં": "van", "વઃ": "vah", "વૅ": "vae", "વૉ": "vao",
+          "શ": "sha", "શા": "shaa", "શિ": "shi", "શી": "shee", "શુ": "shu", "શૂ": "shoo", "શે": "she", "શૈ": "shai", "શો": "sho", "શૌ": "shau", "શં": "shan", "શઃ": "shah", "શૅ": "shae", "શૉ": "shao",
+          "ષ": "sha", "ષા": "shaa", "ષિ": "shi", "ષી": "shee", "ષુ": "shu", "ષૂ": "shoo", "ષે": "she", "ષૈ": "shai", "ષો": "sho", "ષૌ": "shau", "ષં": "shan", "ષઃ": "shah", "ષૅ": "shae", "ષૉ": "shao",
+          "સ": "sa", "સા": "saa", "સિ": "si", "સી": "see", "સુ": "su", "સૂ": "soo", "સે": "se", "સૈ": "sai", "સો": "so", "સૌ": "sau", "સં": "san", "સઃ": "sah", "સૅ": "sae", "સૉ": "sao",
+          "હ": "ha", "હા": "haa", "હિ": "hi", "હી": "hee", "હુ": "hu", "હૂ": "hoo", "હે": "he", "હૈ": "hai", "હો": "ho", "હૌ": "hau", "હં": "han", "હઃ": "hah", "હૅ": "hae", "હૉ": "hao",
+          "ળ": "la", "ળા": "laa", "ળિ": "li", "ળી": "lee", "ળુ": "lu", "ળૂ": "loo", "ળે": "le", "ળૈ": "lai", "ળો": "lo", "ળૌ": "lau", "ળં": "lan", "ળઃ": "lah", "ળૅ": "lae", "ળૉ": "lao",
+          "ક્ષ": "ksh", "ક્ષા": "kshaa", "ક્ષિ": "kshi", "ક્ષી": "kshee", "ક્ષુ": "kshu", "ક્ષૂ": "kshoo", "ક્ષે": "kshe", "ક્ષૈ": "kshai", "ક્ષો": "ksho", "ક્ષૌ": "kshau", "ક્ષં": "kshan", "ક્ષઃ": "kshah", "ક્ષૅ": "kshae", "ક્ષૉ": "kshao",
+          "જ્ઞ": "gya", "જ્ઞા": "gyaa", "જ્ઞિ": "gyi", "જ્ઞી": "gyee", "જ્ઞુ": "gyu", "જ્ઞૂ": "gyoo", "જ્ઞે": "gye", "જ્ઞૈ": "gyai", "જ્ઞો": "gyo", "જ્ઞૌ": "gyau", "જ્ઞં": "gyan", "જ્ઞઃ": "gyah", "જ્ઞૅ": "gyae", "જ્ઞૉ": "gyao",
+          "અ": "a", "આ": "aa", "ઇ": "i", "ઈ": "ee", "ઉ": "u", "ઊ": "oo", "ઋ": "ru", "ૠ": "ru", "એ": "e", "ઐ": "ai", "ઓ": "o", "ઔ": "au",
+          "ા": "a", "િ": "i", "ી": "ee", "ુ": "u", "ૂ": "oo", "ૃ": "ru", "ૄ": "ru", "ૅ": "e", "ે": "e", "ૈ": "ai", "ૉ": "o", "ો": "o", "ૌ": "au", "્": "", "ઁ": "n", "ં": "n", "ઃ": ":",
+          "૦": "0", "ૐ": "om", "શ્રી": "shree",
+        },
+        sulekhToUnicode: {
+          "Úã": "હિ", "Ó": "ર", "Ñ": "મ", "ç": "ુ", "¼": "ખ",
+          "oe": "œ", "wâ": "Ø", "wí": "Øë", "wî": "Øì", "wo": "Øe", "wO": "ØE", "wâý": "Øý", "wâô": "Øô", "tâ": "È", "tí": "Èë", "tî": "Èì", "to": "Èe", "tO": "ÈE", "tâý": "Èý", "tâô": "Èô", "Tâ": "É", "Tí": "Éë", "Tî": "Éì", "To": "Ée", "TO": "ÉE", "Tâý": "��ý", "Tâô": "Éô",
+          "yâ": "Ò", "yí": "Òë", "yî": "Òì", "yo": "Òe", "yO": "ÒE", "yâý": "Òý", "yâô": "Òô", "pâ": "Í", "pí": "Íë", "pî": "Íì", "po": "Íe", "pO": "ÍE", "pâý": "Íý", "pâô": "Íô", "sâ": "Ö", "sí": "Öë",
+          "sî": "Öì", "so": "Öe", "sO": "ÖE", "sâý": "Öý", "sâô": "Öô", "Sâ": "×", "Sí": "×ë", "Sî": "×ì", "So": "×e", "SO": "×E", "Sâý": "×ý", "Sâô": "×ô", "Dâ": "Ë", "Dí": "Ëë", "Dî": "Ëì",
+          "Do": "Ëe", "DO": "ËE", "Dâý": "Ëý", "Dâô": "Ëô", "gâ": "½", "gí": "½ë", "gî": "½ì", "go": "½e", "gO": "½E", "gâý": "½ý", "gâô": "½ô", "Gâ": "¾", "Gí": "¾ë", "Gî": "¾ì",
+          "Go": "¾e", "GO": "¾E", "Gâý": "¾ý", "Gâô": "¾ô", "Kâ": "¼", "Kí": "¼ë", "Kî": "¼ì", "Ko": "¼e", "KO": "¼E", "Kâý": "¼ý", "Kâô": "¼ô", "lâ": "Ô", "lí": "Ôë", "lî": "Ôì",
+          "lo": "Ôe", "lO": "ÔE", "lâý": "Ôý", "lâô": "Ôô", "xâ": "Ü", "xí": "Üë", "xî": "Üì", "xo": "Üe", "xO": "ÜE", "xâý": "Üý", "xâô": "Üô", "câ": "¿", "cí": "¿ë", "cî": "¿ì",
+          "co": "¿e", "cO": "¿E", "câý": "¿ý", "câô": "¿ô", "vâ": "Õ", "ví": "Õë", "vî": "Õì", "vo": "Õe", "vO": "ÕE", "vâý": "Õý", "vâô": "Õô", "bâ": "Ï", "bí": "Ïë", "bî": "Ïì",
+          "bo": "Ïe", "bO": "ÏE", "bâý": "Ïý", "bâô": "Ïô", "Bâ": "Ð", "Bí": "Ðë", "Bî": "Ðì", "Bo": "Ðe", "BO": "ÐE", "Bâý": "Ðý", "Bâô": "Ðô", "nâ": "Ì", "ní": "Ìë", "nî": "Ìì",
+          "no": "Ìe", "nO": "ÌE", "nâý": "Ìý", "nâô": "Ìô", "Nâ": "Ç", "Ní": "Çë", "Nî": "Çì", "No": "Çe", "NO": "ÇE", "Nâý": "Çý", "Nâô": "Çô", "mâ": "Ñ", "mí": "Ñë", "mî": "Ñì",
+          "mo": "Ñe", "mO": "ÑE", "mâý": "Ñý", "mâô": "Ñô", "A": "ૐ", "áí": "ઓ", "áî": "ઔ", "áë": "એ", "á&": "ઍ", "áì": "ઐ", "çý": "ýç", "áâ&": "ઑ", "áâ": "આ", "á": "અ",
+          "å": "ઇ", "æ": "ઈ", "é": "ઉ", "ê": "ઊ", "°": "ઋ", "Âý": "ઝ્ર", "WÕ": "શ્વ", "ƒ": "ન્ન", "š": "ઈં", "™": "ઇં", "ø": "ઉં", "\u003b": "\u0abd", "ù": "ઊં", "ïý": "ýï",
+          "ëý": "ýë", "xâ": "ક્ષ", "Ü": "ક્ષ", "Ý": "ત્ર", "Þ": "જ્ઞ", "Q": "ઠ્ઠ", "x": "ક્ષ્", "X": "ત્ર્", "Þz": "��્ઞ્", "ß": "્રુ", "à": "્રૂ", "¦": "દૃ", "±": "ૠ",
+          "’ë": "જો", "Êz": "દ્‌", "q": "ટ્ટ", "V": "ટ્ઠ", "f": "ડ્ડ", "f": "ડ્ડ", "tÌ": "ત્ન", "F": "ઢ્ઢ", "¤": "હ્લ", "²": "ડ્ઢ", "²": "ડ્ઢ", "ÚzÌ": "હ્ન", "ÚzÌ": "હ્ન",
+          "SÌ": "શ્ન", "ƒz": "ન્ન્", "S¿": "શ્ચ", "az»": "ઙ્ક", "az¼": "ઙ્ખ", "az½": "ઙ્ગ", "az¾": "ઙ્ઘ", "Öýz": "સ્ર્", "¢": "હ્મ", "{": "હ્ન", "ñ": "\u003b", "\u201a": "્ન",
+          "H": "હ્વ", "d": "દ્રુ", "Êz¾": "દ્ઘ", "©": "દ્બ", "ÊzÐ": "દ્ભ", "M": "દ્મ", "]": "દ્વ", "Êz½": "દ્ગ", "}": "દ્ધ", "¨": "દ્ર", "Í‚": "પ્ન", "Íý": "પ્ર", "``â": "જ્રા",
+          "``": "જ્ર", "‘": "જી", "tí": "તે", "k": "ક્", "n": "ન્", "’": "જા", "[z": "હ્ય્", "[z": "હ્ય્", "kÌ": "ક્ન", "®": "ક્ર", "<": "ફ્ર", "Îz": "ફ્", "Çç": "ણુ", "Çè": "ણૂ",
+          "Îç": "ફુ", "Îè": "ફૂ", "S": "શ્", "sÝz": "સ્ત્ર્", "^â": "ત્ત", "^": "ત્ત્", "Ù": "શ્ર", "wÃ": "ષ્ટ", "wÄ": "ષ્ઠ", "W": "શ્ર્", "—": "શ્ન", "ØzÃ": "ષ્ટ", "ØzÄ": "ષ્ઠ",
+          "@": "શ્ચ", "WÕ": "શ્વ", "œ": "શ્વ", "sn": "સ્ન્", "§": "દ્દ", "¥": "ય", "r": "રુ", "R": "રૂ", "#": "રૂ", "_": "હૃ", ">": "ક્ક", "Y": "દ્ય", "~": "જ્જ",
+          "K": "ખ્", "g": "ગ્", "G": "ઘ્", "Â": "ઝ", "c": "ચ્", "j": "જ્", "J": "ઝ્", ":â": "ઞ", ":": "ઞ્", "N": "ણ્", "t": "ત્", "T": "થ્", "D": "ધ્", "n": "ન્", "p": "પ્",
+          "Î": "ફ", "b": "બ્", "B": "ભ્", "m": "મ્", "y": "ય્", "l": "લ્", "v": "વ્", "S": "શ્", "s": "સ્", "w": "ષ્", "h": "હ્", "L": "ળ્", "u": "ુ", "Î": "ફ઼", "»": "ક", "¡": "હ્ર",
+          "¼": "ખ", "½": "ગ", "a": "ઙ", "¿": "ચ", "À": "છ", "Á": "જ", "Â": "ઝ", "Ã": "ટ", "Ä": "ઠ", "Å": "ડ", "Æ": "ઢ", "Ç": "ણ", "È": "ત", "É": "થ", "Ê": "દ", "Ë": "ધ",
+          "Ì": "ન", "¾": "ઘ", "[": "હ્ય", "Í": "પ", "Î": "ફ", "Ï": "બ", "Ð": "ભ", "Ñ": "મ", "Ò": "ય", "Óz": "ર્", "ó": "।", "Ó": "ર", "Ô": "લ", "Õ": "વ", "×": "શ", "Ø": "ષ",
+          "Ö": "સ", "Ú": "હ", "Û": "ળ", "÷": "્ર", "O": "ૌં", "P": "ફ્", "U": "ૂ", "«": "÷", "x": "ü", "fa": "ૅ", "&": "ૅ", "|": "þં", "¬": "?", "“ö": "ëૃ", "âì": "ૌ",
+          "âë": "ો", "ä": "ી", "î": "ૌ", "ë": "ે", "ì": "ૈ", "o": "ોં", "í": "ો", "ë": "ૅ", "â": "ા", "ð": ":", "ì": "િ", "*": "ã", "I": "ીં", "ä": "ી", "ç": "ુ", "è": "ૂ", "ö": "ૃ",
+          "ë": "ે", "ì": "ૈ", "û": "ઁ", "ï": "ં", "ð": "ઃ", "z": "્", "E": "ૈં", "e": "ેં", "e": "ૅં", "0": "૦", "1": "૧", "2": "૨", "3": "૩", "4": "૪", "5": "૫", "6": "૬",
+          "7": "૭", "8": "૮", "9": "૯",
+        },
+        gujaratiToHindi: {
+          "ક": "क", "ખ": "ख", "ગ": "ग", "ઘ": "घ", "ઙ": "ङ", "ચ": "च", "છ": "छ", "જ": "ज", "ઝ": "झ", "ઞ": "ञ", "ટ": "ट", "ઠ": "ठ", "ડ": "ड", "ઢ": "ढ", "ણ": "ण", "ત": "त", "થ": "थ",
+          "દ": "द", "ધ": "ध", "ન": "न", "પ": "प", "ફ": "फ", "બ": "ब", "ભ": "भ", "મ": "म", "ય": "य", "ર": "र", "લ": "ल", "વ": "व", "શ": "श", "ષ": "ष", "સ": "स", "હ": "ह", "ળ": "ळ",
+          "ક્ષ": "क्ष", "જ્ઞ": "ज्ञ",
+          "્": "्", "ા": "ा", "િ": "ि", "ી": "ी", "ુ": "ु", "ૂ": "ू", "ૃ": "ृ", "ૅ": "े", "ે": "े", "ૈ": "ै", "ૉ": "ो", "ો": "ो", "ૌ": "ौ", "ં": "ं", "ઁ": "ँ", "ઃ": "ः",
+          "અ": "अ", "આ": "आ", "ઇ": "इ", "ઈ": "ई", "ઉ": "उ", "ઊ": "ऊ", "ઋ": "ऋ", "એ": "ए", "ઐ": "ऐ", "ઓ": "ओ", "ઔ": "औ",
+          "૦": "०", "૧": "१", "૨": "૨", "૩": "३", "૪": "૪", "૫": "५", "૬": "६", "૭": "૭", "૮": "૮", "૯": "९",
+        },
+        // New mapping for Hindi to Gujarati conversion
+        hindiToGujarati: {
+          "क": "ક", "ખ": "ખ", "ग": "ગ", "घ": "ઘ", "ङ": "ઙ", "ચ": "ચ", "छ": "છ", "ज": "જ", "झ": "ઝ", "ञ": "ઞ", "ट": "ટ", "ठ": "ઠ", "ड": "ડ", "ढ": "ઢ", "ण": "ણ", "त": "ત", "थ": "થ",
+          "द": "દ", "ध": "ધ", "न": "ન", "प": "પ", "फ": "ફ", "ब": "બ", "भ": "ભ", "म": "મ", "य": "ય", "र": "ર", "ल": "લ", "व": "વ", "શ": "શ", "ष": "ષ", "स": "સ", "ह": "હ", "ळ": "ળ",
+          "ક્ષ": "ક્ષ", "ज्ञ": "જ્ઞ",
+          "्": "્", "ા": "ા", "ि": "િ", "ी": "ી", "ु": "ુ", "ू": "ૂ", "ृ": "ૃ", "े": "ે", "ै": "ૈ", "ो": "ો", "ौ": "ૌ", "ं": "ં", "ँ": "ઁ", "ः": "ઃ",
+          "अ": "અ", "आ": "આ", "इ": "ઇ", "ई": "ઈ", "उ": "ઉ", "ऊ": "ઊ", "ऋ": "ઋ", "ए": "એ", "ऐ": "ઐ", "ओ": "ઓ", "औ": "ઔ",
+          "०": "૦", "१": "૧", "૨": "૨", "૩": "૩", "૪": "૪", "૫": "૫", "૬": "૬", "૭": "૭", "૮": "૮", "९": "૯",
+        },
+        englishToGujarati: {
+          "shree": "શ્રી", "om": "ૐ", "0": "૦", "1": "૧", "2": "૨", "3": "૩", "4": "૪", "5": "૫", "6": "૬", "7": "૭", "8": "૮", "9": "૯",
+          "a": "અ", "aa": "આ", "i": "ઇ", "ee": "ઈ", "u": "ઉ", "oo": "ઊ", "ru": "ઋ", "e": "એ", "ai": "ઐ", "o": "ઓ", "au": "ઔ",
+          "ka": "ક", "kaa": "કા", "ki": "કિ", "kee": "કી", "ku": "કુ", "koo": "કૂ", "ke": "કે", "kai": "કૈ", "ko": "કો", "kau": "કૌ", "kan": "કં", "kah": "કઃ",
+          "kha": "ખ", "khaa": "ખા", "khi": "ખિ", "khee": "ખી", "khu": "ખુ", "khoo": "ખૂ", "khe": "ખે", "khai": "ખૈ", "kho": "ખો", "khau": "ખૌ", "khan": "ખં", "khah": "ખઃ",
+          "ga": "ગ", "gaa": "ગા", "gi": "ગિ", "gee": "ગી", "gu": "ગુ", "goo": "ગૂ", "ge": "ગે", "gai": "ગૈ", "go": "ગો", "gau": "ગૌ", "gan": "ગં", "gah": "ગઃ",
+          "gha": "ઘ", "ghaa": "ઘા", "ghi": "ઘિ", "ghee": "ઘી", "ghu": "ઘુ", "ghoo": "ઘૂ", "ghe": "ઘે", "ghai": "ઘૈ", "gho": "ઘો", "ghau": "ઘૌ", "ghan": "ઘં", "ghah": "ઘઃ",
+          "cha": "ચ", "chaa": "ચા", "chi": "ચિ", "chee": "ચી", "chu": "ચુ", "choo": "ચૂ", "che": "ચે", "chai": "ચૈ", "cho": "ચો", "chau": "ચૌ", "chan": "ચં", "chah": "ચઃ",
+          "chha": "છ", "chhaa": "છા", "chhi": "છિ", "chhee": "છી", "chhu": "છુ", "chhoo": "છૂ", "chhe": "છે", "chhai": "છૈ", "chho": "છો", "chhau": "છૌ", "chhan": "છં", "chhah": "છઃ",
+          "ja": "જ", "jaa": "જા", "ji": "જિ", "jee": "જી", "ju": "જુ", "joo": "જૂ", "je": "જે", "jai": "જૈ", "jo": "જો", "jau": "જૌ", "jan": "જં", "jah": "જઃ",
+          "jha": "ઝ", "jhaa": "ઝા", "jhi": "ઝિ", "jhee": "ઝી", "jhu": "ઝુ", "jhoo": "ઝૂ", "zhe": "ઝે", "zhai": "ઝૈ", "zho": "ઝો", "zhau": "ઝૌ", "zhan": "ઝં", "zhah": "ઝઃ",
+          "Ta": "ટ", "Taa": "ટા", "Ti": "ટિ", "Tee": "ટી", "Tu": "ટુ", "Too": "ટૂ", "Te": "ટે", "Tai": "ટૈ", "To": "ટો", "Tau": "ટૌ", "Tan": "ટં", "Tah": "ટઃ",
+          "Tha": "ઠ", "Thaa": "ઠા", "Thi": "ઠિ", "Thee": "ઠી", "Thu": "ઠુ", "Thoo": "ઠૂ", "The": "ઠે", "Thai": "ઠૈ", "Tho": "ઠો", "Thau": "ઠૌ", "Than": "ઠં", "Thah": "ઠઃ",
+          "Da": "ડ", "Daa": "ડા", "Di": "ડિ", "Dee": "ડી", "Du": "ડુ", "Doo": "ડૂ", "De": "ડે", "Dai": "ડૈ", "Do": "ડો", "Dau": "ડૌ", "Dan": "ડં", "Dah": "ડઃ",
+          "Dha": "ઢ", "Dhaa": "ઢા", "Dhi": "ઢિ", "Dhee": "ઢી", "Dhu": "ઢુ", "Dhoo": "ઢૂ", "Dhe": "ઢે", "Dhai": "ઢૈ", "Dho": "ઢો", "Dhau": "ઢૌ", "Dhan": "ઢં", "Dhah": "ઢઃ",
+          "Na": "ણ", "Naa": "ણા", "Ni": "ણિ", "Nee": "ણી", "Nu": "ણુ", "Noo": "ણૂ", "Ne": "ણે", "Nai": "ણૈ", "No": "ણો", "Nau": "ણૌ", "Nan": "ણં", "Nah": "ણઃ",
+          "ta": "ત", "taa": "તા", "ti": "તિ", "tee": "તી", "tu": "તુ", "too": "તૂ", "te": "તે", "tai": "તૈ", "to": "તો", "tau": "તૌ", "tan": "તં", "tah": "તઃ",
+          "tha": "થ", "thaa": "થા", "thi": "થિ", "thee": "થી", "thu": "થુ", "thoo": "થૂ", "the": "થે", "thai": "થૈ", "tho": "થો", "thau": "થૌ", "than": "થં", "thah": "થઃ",
+          "da": "દ", "daa": "દા", "di": "દિ", "dee": "દી", "du": "દુ", "doo": "દૂ", "de": "દે", "dai": "દૈ", "do": "દો", "dau": "દૌ", "dan": "દં", "dah": "દઃ",
+          "dha": "ધ", "dhaa": "ધા", "dhi": "ધિ", "dhee": "ધી", "dhu": "ધુ", "dhoo": "ધૂ", "dhe": "ધે", "dhai": "ધૈ", "dho": "ધો", "dhau": "ધૌ", "dhan": "ધં", "dhah": "ધઃ",
+          "na": "ન", "naa": "ના", "ni": "નિ", "nee": "ની", "nu": "નુ", "noo": "નૂ", "ne": "ને", "nai": "નૈ", "no": "નો", "nau": "નૌ", "nan": "નં", "nah": "નઃ",
+          "pa": "પ", "paa": "પા", "pi": "પિ", "pee": "પી", "pu": "પુ", "poo": "પૂ", "pe": "પે", "pai": "પૈ", "po": "પો", "pau": "પૌ", "pan": "પં", "pah": "પઃ",
+          "fa": "ફ", "faa": "ફા", "fi": "ફિ", "fee": "ફી", "fu": "ફુ", "foo": "ફૂ", "fe": "ફે", "fai": "ફૈ", "fo": "ફો", "fau": "ફૌ", "fan": "ફં", "fah": "ફઃ",
+          "ba": "બ", "baa": "બા", "bi": "બિ", "bee": "બી", "bu": "બુ", "boo": "બૂ", "be": "બે", "bai": "બૈ", "bo": "બો", "bau": "બૌ", "ban": "બં", "bah": "બઃ",
+          "bha": "ભ", "bhaa": "ભા", "bhi": "ભિ", "bhee": "ભી", "bhu": "ભુ", "bhoo": "ભૂ", "bhe": "ભે", "bhai": "ભૈ", "bho": "ભો", "bhau": "ભૌ", "bhan": "ભં", "bhah": "ભઃ",
+          "ma": "મ", "maa": "મા", "mi": "મિ", "mee": "મી", "mu": "મુ", "moo": "મૂ", "me": "મે", "mai": "મૈ", "mo": "મો", "mau": "મૌ", "man": "મં", "mah": "મઃ",
+          "ya": "ય", "yaa": "યા", "yi": "યિ", "yee": "યી", "yu": "યુ", "yoo": "યૂ", "ye": "યે", "yai": "યૈ", "yo": "યો", "yau": "યૌ", "yan": "યં", "yah": "યઃ",
+          "ra": "ર", "raa": "રા", "ri": "રિ", "ree": "રી", "ruu": "રૂ", "re": "રે", "rai": "રૈ", "ro": "રો", "rau": "રૌ", "ran": "રં", "rah": "રઃ",
+          "la": "લ", "laa": "લા", "li": "લિ", "lee": "લી", "lu": "લુ", "loo": "લૂ", "le": "લે", "lai": "લૈ", "lo": "લો", "lau": "લૌ", "lan": "લં", "lah": "લઃ",
+          "La": "ળ", "Laa": "ળા", "Li": "ળિ", "Lee": "ળી", "Lu": "ળુ", "Loo": "ળૂ", "Le": "ળે", "Lai": "ળૈ", "Lo": "ળો", "Lau": "ળૌ", "Lan": "ળં", "Lah": "ળઃ",
+          "va": "વ", "vaa": "વા", "vi": "વિ", "vee": "વી", "vu": "વુ", "voo": "વૂ", "ve": "વે", "vai": "વૈ", "vo": "વો", "vau": "વૌ", "van": "વં", "vah": "વઃ",
+          "sha": "શ", "shaa": "શા", "shi": "શિ", "shee": "શી", "shu": "શુ", "shoo": "શૂ", "she": "શે", "shai": "શૈ", "sho": "શો", "shau": "શૌ", "shan": "શં", "shah": "શઃ",
+          "Sha": "ષ", "Shaa": "ષા", "Shi": "ષિ", "Shee": "ષી", "Shu": "ષુ", "Shoo": "ષૂ", "She": "ષે", "Shai": "ષૈ", "Sho": "ષો", "Shau": "ષૌ", "Shan": "ષં", "Shah": "ષઃ",
+          "sa": "સ", "saa": "સા", "si": "સિ", "see": "સી", "su": "સુ", "soo": "સૂ", "se": "સે", "sai": "સૈ", "so": "સો", "sau": "સૌ", "san": "સં", "sah": "સઃ",
+          "ha": "હ", "haa": "હા", "hi": "હિ", "hee": "હી", "hu": "હુ", "hoo": "હૂ", "he": "હે", "hai": "હૈ", "ho": "હો", "hau": "હૌ", "han": "હં", "hah": "હઃ",
+          "ksha": "ક્ષ", "kshaa": "ક્ષા", "kshi": "ક્ષિ", "kshee": "ક્ષી", "kshu": "ક્ષુ", "kshoo": "ક્ષૂ", "kshe": "ક્ષે", "kshai": "ક્ષૈ", "ksho": "ક્ષો", "kshau": "ક્ષૌ", "kshan": "ક્���ં", "kshah": "ક્ષઃ",
+          "gya": "જ્ઞ", "gyaa": "જ્ઞા", "gyi": "જ્ઞિ", "gyee": "જ્ઞી", "gyu": "જ્ઞુ", "gyoo": "જ્ઞૂ", "gye": "જ્ઞે", "gyai": "જ્ઞૈ", "gyo": "જ્ઞો", "gyau": "જ્ઞૌ", "gyan": "જ્ઞં", "gyah": "જ્ઞઃ",
+          "A": "અ", "I": "ઇ", "U": "ઉ", "E": "એ", "O": "ઓ",
+          "aa": "ા", "i": "િ", "ee": "ી", "u": "ુ", "oo": "ૂ", "e": "ે", "ai": "ૈ", "o": "ો", "au": "ૌ",
+          "n": "ં", "":"્"
+        },
+        unicodeToSulekh: {
+          // This mapping is created by reversing the SulekhToUnicode one for bidirectional conversion
+          "હિ": "Úã", "ર": "Ó", "મ": "Ñ", "ુ": "ç", "ખ": "¼",
+          "œ": "oe", "Ø": "wâ", "Øë": "wí", "Øì": "wî", "Øe": "wo", "ØE": "wO", "Øý": "wâý", "Øô": "wâô", "È": "tâ", "Èë": "tí", "Èì": "tî", "Èe": "to", "ÈE": "tO", "Èý": "tâý", "Èô": "tâô", "É": "Tâ", "Éë": "Tí", "Éì": "Tî", "Ée": "To", "ÉE": "TO", "Éý": "Tâý", "Éô": "Tâô",
+          "Ò": "yâ", "Òë": "yí", "Òì": "yî", "Òe": "yo", "ÒE": "yO", "Òý": "yâý", "Òô": "yâô", "Í": "pâ", "Íë": "pí", "Íì": "pî", "Íe": "po", "ÍE": "pO", "Íý": "pâý", "Íô": "pâô", "Ö": "sâ", "Öë": "sí",
+          "Öì": "sî", "Öe": "so", "ÖE": "sO", "Öý": "sâý", "Öô": "sâô", "×": "Sâ", "×ë": "Sí", "×ì": "Sî", "×e": "So", "×E": "SO", "×ý": "Sâý", "×ô": "Sâô", "Ë": "Dâ", "Ëë": "Dí", "Ëì": "Dî",
+          "Ëe": "Do", "ËE": "DO", "Ëý": "Dâý", "Ëô": "Dâô", "½": "gâ", "½ë": "gí", "½ì": "gî", "½e": "go", "½E": "gO", "½ý": "gâý", "½ô": "gâô", "¾": "Gâ", "¾ë": "Gí", "¾ì": "Gî",
+          "¾e": "Go", "¾E": "GO", "¾ý": "Gâý", "¾ô": "Gâô", "¼": "Kâ", "¼ë": "Kí", "¼ì": "Kî", "¼e": "Ko", "¼E": "KO", "¼ý": "Kâý", "¼ô": "Kâô", "Ô": "lâ", "Ôë": "lí", "Ôì": "lî",
+          "Ôe": "lo", "ÔE": "lO", "Ôý": "lâý", "Ôô": "lâô", "Ü": "xâ", "Üë": "xí", "Üì": "xî", "Üe": "xo", "ÜE": "xO", "Üý": "xâý", "Üô": "xâô", "¿": "câ", "¿ë": "cí", "¿ì": "cî",
+          "¿e": "co", "¿E": "cO", "¿ý": "câý", "¿ô": "câô", "Õ": "vâ", "Õë": "ví", "Õì": "vî", "Õe": "vo", "ÕO": "vO", "Õý": "vâý", "Õô": "vâô", "Ï": "bâ", "Ïë": "bí", "Ïì": "bî",
+          "Ïe": "bo", "ÏE": "bO", "Ïý": "bâý", "Ïô": "bâô", "Ð": "Bâ", "Ðë": "Bí", "Ðì": "Bî", "Ðe": "Bo", "ÐE": "BO", "Ðý": "Bâý", "Ðô": "Bâô", "Ì": "nâ", "Ìë": "ní", "Ìì": "nî",
+          "Ìe": "no", "ÌE": "nO", "Ìý": "nâý", "Ìô": "nâô", "Ç": "Nâ", "Çë": "Ní", "Çì": "Nî", "Çe": "No", "ÇE": "NO", "Çý": "Nâý", "Çô": "Nâô", "Ñ": "mâ", "Ñë": "mí", "Ñì": "mî",
+          "Ñe": "mo", "ÑO": "mO", "Ñý": "mâý", "Ñô": "mâô", "ૐ": "A", "ઓ": "áí", "ઔ": "áî", "એ": "áë", "ઍ": "á&", "ઐ": "áì", "ýç": "çý", "ઑ": "áâ&", "આ": "áâ", "અ": "á",
+          "ઇ": "å", "ઈ": "æ", "ઉ": "é", "ઊ": "ê", "ઋ": "°", "ઝ્ર": "Âý", "શ્વ": "WÕ", "ન્ન": "ƒ", "ઈં": "š", "ઇં": "™", "ઉં": "ø", "\u0abd": "\u003b", "ઊં": "ù", "ýï": "ïý",
+          "ýë": "ëý", "ક્ષ": "xâ", "ક્ષ": "Ü", "ત્ર": "Ý", "જ્ઞ": "Þ", "ઠ્ઠ": "Q", "ક્ષ્": "x", "ત્ર્": "X", "જ્ઞ્": "Þz", "્રુ": "ß", "્રૂ": "à", "દૃ": "¦", "ૠ": "±",
+          "જો": "’ë", "દ્‌": "Êz", "ટ્ટ": "q", "ટ્ઠ": "V", "ડ્ડ": "f", "ડ્ડ": "f", "ત્ન": "tÌ", "ઢ્ઢ": "F", "હ્લ": "¤", "ડ્ઢ": "²", "ડ્ઢ": "²", "હ્ન": "ÚzÌ", "હ્ન": "ÚzÌ",
+          "શ્ન": "SÌ", "ન્ન્": "ƒz", "શ્ચ": "S¿", "ઙ્ક": "az»", "ઙ્ખ": "az¼", "ઙ્ગ": "az½", "ઙ્ઘ": "az¾", "સ્ર્": "Öýz", "હ્મ": "¢", "હ્ન": "{", "\u003b": "ñ", "્ન": "\u201a",
+          "હ્વ": "H", "દ્રુ": "d", "દ્ઘ": "Êz¾", "દ્બ": "©", "દ્ભ": "ÊzÐ", "દ્મ": "M", "દ્વ": "]", "દ્ગ": "Êz½", "દ્ધ": "}", "દ્ર": "¨", "પ��ન": "Í‚", "પ્ર": "Íý", "જ્રા": "``â",
+          "જ્ર": "``", "જી": "‘", "તે": "tí", "ક્": "k", "ન્": "n", "જા": "’", "હ્ય્": "[z", "હ્ય્": "[z", "ક્ન": "kÌ", "ક્ર": "®", "ફ્ર": "<", "ફ્": "Îz", "ણુ": "Çç", "ણૂ": "Çè",
+          "ફુ": "Îç", "ફૂ": "Îè", "શ્": "S", "સ્ત્ર્": "sÝz", "ત્ત": "^â", "ત્ત્": "^", "શ્ર": "Ù", "ષ્ટ": "wÃ", "ષ્ઠ": "wÄ", "શ્ર્": "W", "શ્ન": "—", "ષ્ટ": "ØzÃ", "ષ્ઠ": "ØzÄ",
+          "શ્ચ": "@", "શ્વ": "WÕ", "શ્વ": "œ", "સ્ન્": "sn", "દ્દ": "§", "ય": "¥", "રુ": "r", "રૂ": "R", "રૂ": "#", "હૃ": "_", "ક્ક": ">", "દ્ય": "Y", "જ્જ": "~",
+          "ખ્": "K", "ગ્": "g", "ઘ્": "G", "ઝ": "Â", "ચ્": "c", "જ્": "j", "ઝ્": "J", "ઞ": ":â", "ઞ્": ":", "ણ્": "N", "ત્": "t", "થ્": "T", "ધ્": "D", "ન્": "n", "પ્": "p",
+          "ફ": "Î", "બ્": "b", "ભ્": "B", "મ્": "m", "ય્": "y", "લ્": "l", "વ્": "v", "શ્": "S", "સ્": "s", "ષ્": "w", "હ્": "h", "ળ્": "L", "ુ": "u", "ફ઼": "Î", "ક": "»", "હ્ર": "¡",
+          "ખ": "¼", "ગ": "½", "ઙ": "a", "ચ": "¿", "છ": "À", "જ": "Á", "ઝ": "Â", "ટ": "Ã", "ઠ": "Ä", "ડ": "Å", "ઢ": "Æ", "ણ": "Ç", "ત": "È", "થ": "É", "દ": "Ê", "ધ": "Ë",
+          "ન": "Ì", "ઘ": "¾", "હ્ય": "[", "પ": "Í", "ફ": "Î", "બ": "Ï", "ભ": "Ð", "મ": "Ñ", "ય": "Ò", "ર્": "Óz", "।": "ó", "ર": "Ó", "લ": "Ô", "વ": "Õ", "શ": "×", "ષ": "Ø",
+          "સ": "Ö", "હ": "Ú", "ળ": "Û", "્ર": "÷", "ૌં": "O", "ફ્": "P", "ૂ": "U", "÷": "«", "ü": "x", "ૅ": "fa", "ૅ": "&", "þં": "|", "?": "¬", "ëૃ": "“ö", "ૌ": "âì",
+          "ો": "âë", "ી": "ä", "ૌ": "î", "ે": "ë", "ૈ": "ì", "ોં": "o", "ો": "í", "ૅ": "ë", "ા": "â", ":": "ð", "િ": "ì", "ã": "*", "ીં": "I", "ી": "ä", "ુ": "ç", "ૂ": "è", "ૃ": "ö",
+          "ે": "ë", "ૈ": "ì", "ઁ": "û", "ં": "ï", "ઃ": "ð", "્": "z", "ૈં": "E", "ેં": "e", "ૅં": "e", "૦": "0", "૧": "1", "૨": "2", "૩": "3", "૪": "4", "૫": "5", "૬": "6",
+          "૭": "7", "૮": "8", "૯": "9",
+        }
+      };
+
+      // A single, reusable function to handle all conversions from one mapping
+      const complexConvert = (text, mapping) => {
+        let convertedText = text;
+        const sortedKeys = Object.keys(mapping).sort((a, b) => b.length - a.length);
+        for (const key of sortedKeys) {
+          convertedText = convertedText.replaceAll(key, mapping[key]);
+        }
+        return convertedText;
+      };
+
+      // Function to convert from Gujarati Unicode to all other formats
+      const convertUnicodeToAll = () => {
+        const unicodeText = document.getElementById("unicodeText").value;
+        document.getElementById("englishText").value = complexConvert(unicodeText, mappings.gujaratiToEnglish);
+        document.getElementById("hindiUnicode").value = complexConvert(unicodeText, mappings.gujaratiToHindi);
+        document.getElementById("sulekhText").value = complexConvert(unicodeText, mappings.unicodeToSulekh);
+      };
+
+      // Function to convert from Sulekh to all other formats
+      const convertSulekhToUnicode = () => {
+        const sulekhText = document.getElementById("sulekhText").value;
+        const unicodeText = complexConvert(sulekhText, mappings.sulekhToUnicode);
+        document.getElementById("unicodeText").value = unicodeText;
+        // Then, use the newly converted Unicode to update the other fields
+        convertUnicodeToAll();
+      };
+
+      // Function to convert from Hindi Unicode to all other formats
+      const convertHindiToAll = () => {
+        const hindiText = document.getElementById("hindiUnicode").value;
+        const unicodeText = complexConvert(hindiText, mappings.hindiToGujarati);
+        document.getElementById("unicodeText").value = unicodeText;
+        // Then, use the newly converted Unicode to update the other fields
+        convertUnicodeToAll();
+      };
+
+      // Function to convert from English to all other formats
+      const convertEnglishToAll = () => {
+        const englishText = document.getElementById("englishText").value;
+        const unicodeText = complexConvert(englishText, mappings.englishToGujarati);
+        document.getElementById("unicodeText").value = unicodeText;
+        // Now, update other fields based on the new unicode text
+        document.getElementById("hindiUnicode").value = complexConvert(unicodeText, mappings.gujaratiToHindi);
+        document.getElementById("sulekhText").value = complexConvert(unicodeText, mappings.unicodeToSulekh);
+      };
+    </script>
+  </body>
+</html>
