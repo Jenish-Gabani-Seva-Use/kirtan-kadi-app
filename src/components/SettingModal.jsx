@@ -53,6 +53,12 @@ const SettingsModal = ({ isOpen, onClose, editorSettings, onUpdateEditorSettings
   <option value="112px">112px</option>
   <option value="120px">120px</option>
   <option value="128px">128px</option>
+  <option value="500px">500px</option>
+  <option value="600px">600px</option>
+  <option value="700px">700px</option>
+  <option value="800px">800px</option>
+  <option value="900px">900px</option>
+  <option value="1000px">1000px</option>
 </select>
           </div>
           

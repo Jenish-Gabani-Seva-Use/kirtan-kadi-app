@@ -132,6 +132,13 @@ const selectLine = useCallback((index) => {
 // Keyboard handler
 useEffect(() => {
   const handleKeyDown = (e) => {
+    // ESC key to open search bar
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      setKirtanSearchOpen(true);
+      return;
+    }
+
     if (e.key === ' ') {
       if (!['INPUT', 'TEXTAREA'].includes(e.target.tagName) && !e.target.isContentEditable) {
         e.preventDefault();
@@ -170,7 +177,7 @@ useEffect(() => {
 
   window.addEventListener('keydown', handleKeyDown);
   return () => window.removeEventListener('keydown', handleKeyDown);
-}, [allLines, selectedLines, selectedLineIndex, isInputPanelFocused, updateCurrentTab, selectLine, triggerVmixOverlay]);
+}, [allLines, selectedLines, selectedLineIndex, isInputPanelFocused, updateCurrentTab, selectLine, triggerVmixOverlay, setKirtanSearchOpen]);
 
 // Tab management functions
 const addNewTab = () => {
@@ -226,6 +233,9 @@ const processText = (text) => {
     }
   }
   
+  // Automatically add first 2 lines to shortcut kadi (selectedLines)
+  const shortcutLines = lines.slice(0, 2);
+  
   // Update tab name along with data
   setTabs(tabs.map(tab => 
     tab.id === activeTabId 
@@ -235,7 +245,7 @@ const processText = (text) => {
           data: {
             ...tab.data,
             allLines: lines,
-            selectedLines: [],
+            selectedLines: shortcutLines, // Add first 2 lines to shortcut kadi
             selectedLineIndex: lines.length > 0 ? 0 : -1,
             currentDisplayedText: lines.length > 0 ? lines[0] : '',
             originalInputText: text
@@ -338,15 +348,21 @@ const deleteSelectedLines = () => {
 
 // Handle kirtan selection from search
 const handleSelectKirtan = (kirtan) => {
+  // Split content into lines
+  const lines = kirtan.sulekhContent ? kirtan.sulekhContent.split('\n').filter(line => line.trim() !== '') : [];
+  
+  // Automatically add first 2 lines to shortcut kadi
+  const shortcutLines = lines.slice(0, 2);
+  
   // Create a new tab with the kirtan content
   const newTab = {
     id: nextTabId,
     name: kirtan.sulekhTitle || kirtan.unicodeTitle || kirtan.englishTitle || `Kirtan ${nextTabId}`,
     active: false,
     data: {
-      allLines: kirtan.sulekhContent ? kirtan.sulekhContent.split('\n').filter(line => line.trim() !== '') : [],
-      selectedLines: [],
-      currentDisplayedText: kirtan.sulekhContent ? kirtan.sulekhContent.split('\n')[0] || '' : '',
+      allLines: lines,
+      selectedLines: shortcutLines, // Add first 2 lines to shortcut kadi
+      currentDisplayedText: lines.length > 0 ? lines[0] : '',
       selectedLineIndex: 0,
       originalInputText: kirtan.sulekhContent || ''
     }
