@@ -8,8 +8,15 @@ const PinModal = ({ isOpen, onClose, onSuccess, title = "Enter PIN" }) => {
   const handleSubmit = (e) => {
     e.preventDefault();
     
-    // Check PIN
-    if (pin === '0103') {
+    // Check PIN based on the action
+    let correctPin = '1010'; // Default for adding kirtans
+    
+    // Check if it's for database or import (based on title)
+    if (title.includes('Database') || title.includes('Import')) {
+      correctPin = '0103';
+    }
+    
+    if (pin === correctPin) {
       setPin('');
       setError('');
       onSuccess();

@@ -51,6 +51,7 @@ function MainApp({ onLogout }) {
   const [overlayActive, setOverlayActive] = useState(false);
   const [pinModalOpen, setPinModalOpen] = useState(false);
   const [pendingAction, setPendingAction] = useState(null);
+  const [lockedTabs, setLockedTabs] = useState([]);
 
   // Get current tab data
   const currentTab = tabs.find(tab => tab.id === activeTabId) || tabs[0];
@@ -196,6 +197,23 @@ const addNewTab = () => {
   setTabs([...tabs, newTab]);
   setActiveTabId(nextTabId);
   setNextTabId(nextTabId + 1);
+  
+  // Automatically open input modal for new tab
+  setTimeout(() => {
+    setInputModalOpen(true);
+  }, 100);
+};
+
+const reorderTabs = (newTabs) => {
+  setTabs(newTabs);
+};
+
+const toggleLockTab = (tabId) => {
+  if (lockedTabs.includes(tabId)) {
+    setLockedTabs(lockedTabs.filter(id => id !== tabId));
+  } else {
+    setLockedTabs([...lockedTabs, tabId]);
+  }
 };
 
 const switchTab = (tabId) => {
@@ -451,6 +469,9 @@ return (
       onCloseTab={closeTab}
       onAddTab={addNewTab}
       onRenameTab={renameTab}
+      onReorderTabs={reorderTabs}
+      lockedTabs={lockedTabs}
+      onToggleLockTab={toggleLockTab}
     />
 
     <div className="main-container">

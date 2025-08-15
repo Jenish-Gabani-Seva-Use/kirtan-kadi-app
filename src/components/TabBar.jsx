@@ -1,10 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
 import '../styles/TabBar.css';
 
-const TabBar = ({ tabs, activeTabId, onSwitchTab, onCloseTab, onAddTab, onRenameTab }) => {
+const TabBar = ({ tabs, activeTabId, onSwitchTab, onCloseTab, onAddTab, onRenameTab, onReorderTabs, lockedTabs, onToggleLockTab }) => {
   const [contextMenu, setContextMenu] = useState(null);
   const [editingTabId, setEditingTabId] = useState(null);
   const [editingName, setEditingName] = useState('');
+  const [draggedTab, setDraggedTab] = useState(null);
+  const [dragOverIndex, setDragOverIndex] = useState(null);
   const contextMenuRef = useRef(null);
 
   useEffect(() => {
@@ -38,9 +40,55 @@ const TabBar = ({ tabs, activeTabId, onSwitchTab, onCloseTab, onAddTab, onRename
 
   const handleDelete = () => {
     if (contextMenu && tabs.length > 1) {
+      // Check if tab is locked
+      if (lockedTabs && lockedTabs.includes(contextMenu.tabId)) {
+        alert('This tab is locked and cannot be closed. Unlock it first.');
+        setContextMenu(null);
+        return;
+      }
       onCloseTab(contextMenu.tabId);
       setContextMenu(null);
     }
+  };
+
+  const handleToggleLock = () => {
+    if (contextMenu) {
+      onToggleLockTab(contextMenu.tabId);
+      setContextMenu(null);
+    }
+  };
+
+  // Drag and Drop handlers
+  const handleDragStart = (e, tab, index) => {
+    setDraggedTab({ tab, index });
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragOver = (e, index) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    setDragOverIndex(index);
+  };
+
+  const handleDragLeave = () => {
+    setDragOverIndex(null);
+  };
+
+  const handleDrop = (e, dropIndex) => {
+    e.preventDefault();
+    if (draggedTab && draggedTab.index !== dropIndex) {
+      const newTabs = [...tabs];
+      const [removed] = newTabs.splice(draggedTab.index, 1);
+      newTabs.splice(dropIndex, 0, removed);
+      onReorderTabs(newTabs);
+    }
+    setDraggedTab(null);
+    setDragOverIndex(null);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedTab(null);
+    setDragOverIndex(null);
   };
 
   const handleRenameSubmit = (tabId) => {
@@ -78,43 +126,55 @@ const TabBar = ({ tabs, activeTabId, onSwitchTab, onCloseTab, onAddTab, onRename
   return (
     <div className="tab-bar">
       <div className="tabs-container">
-        {tabs.map(tab => (
-          <div
-            key={tab.id}
-            className={`tab ${tab.id === activeTabId ? 'active' : ''}`}
-            onClick={() => onSwitchTab(tab.id)}
-            onContextMenu={(e) => handleContextMenu(e, tab)}
-          >
-            {editingTabId === tab.id ? (
-              <input
-                type="text"
-                className="tab-rename-input"
-                value={editingName}
-                onChange={(e) => setEditingName(e.target.value)}
-                onBlur={() => handleRenameSubmit(tab.id)}
-                onKeyDown={(e) => handleRenameKeyDown(e, tab.id)}
-                onClick={(e) => e.stopPropagation()}
-                autoFocus
-                style={{ fontFamily: getFontFamily(tab) }}
-              />
-            ) : (
-              <span className="tab-name" style={{ fontFamily: getFontFamily(tab) }}>
-                {tab.name}
-              </span>
-            )}
-            {tabs.length > 1 && (
-              <button
-                className="tab-close"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onCloseTab(tab.id);
-                }}
-              >
-                ×
-              </button>
-            )}
-          </div>
-        ))}
+        {tabs.map((tab, index) => {
+          const isLocked = lockedTabs && lockedTabs.includes(tab.id);
+          return (
+            <div
+              key={tab.id}
+              className={`tab ${tab.id === activeTabId ? 'active' : ''} ${dragOverIndex === index ? 'drag-over' : ''}`}
+              onClick={() => onSwitchTab(tab.id)}
+              onContextMenu={(e) => handleContextMenu(e, tab)}
+              draggable={true}
+              onDragStart={(e) => handleDragStart(e, tab, index)}
+              onDragOver={(e) => handleDragOver(e, index)}
+              onDragLeave={handleDragLeave}
+              onDrop={(e) => handleDrop(e, index)}
+              onDragEnd={handleDragEnd}
+            >
+              {isLocked && (
+                <span className="lock-icon" title="Tab is locked">🔒</span>
+              )}
+              {editingTabId === tab.id ? (
+                <input
+                  type="text"
+                  className="tab-rename-input"
+                  value={editingName}
+                  onChange={(e) => setEditingName(e.target.value)}
+                  onBlur={() => handleRenameSubmit(tab.id)}
+                  onKeyDown={(e) => handleRenameKeyDown(e, tab.id)}
+                  onClick={(e) => e.stopPropagation()}
+                  autoFocus
+                  style={{ fontFamily: getFontFamily(tab) }}
+                />
+              ) : (
+                <span className="tab-name" style={{ fontFamily: getFontFamily(tab) }}>
+                  {tab.name}
+                </span>
+              )}
+              {tabs.length > 1 && !isLocked && (
+                <button
+                  className="tab-close"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onCloseTab(tab.id);
+                  }}
+                >
+                  ×
+                </button>
+              )}
+            </div>
+          );
+        })}
         <button className="add-tab-btn" onClick={onAddTab}>
           +
         </button>
@@ -130,10 +190,14 @@ const TabBar = ({ tabs, activeTabId, onSwitchTab, onCloseTab, onAddTab, onRename
             top: contextMenu.y
           }}
         >
+          <div className="context-menu-item" onClick={handleToggleLock}>
+            <i className={`fas fa-${lockedTabs && lockedTabs.includes(contextMenu.tabId) ? 'unlock' : 'lock'}`}></i> 
+            {lockedTabs && lockedTabs.includes(contextMenu.tabId) ? 'Unlock Tab' : 'Lock Tab'}
+          </div>
           <div className="context-menu-item" onClick={handleRename}>
             <i className="fas fa-edit"></i> Rename
           </div>
-          {tabs.length > 1 && (
+          {tabs.length > 1 && (!lockedTabs || !lockedTabs.includes(contextMenu.tabId)) && (
             <div className="context-menu-item" onClick={handleDelete}>
               <i className="fas fa-trash"></i> Delete
             </div>

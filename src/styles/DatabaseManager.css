@@ -13,11 +13,12 @@
 
 .database-manager-content {
   background: white;
-  border-radius: 8px;
   width: 90%;
-  max-width: 800px;
-  max-height: 90vh;
-  overflow-y: auto;
+  max-width: 1100px;
+  height: 85vh;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
 }
 
@@ -25,10 +26,10 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 20px 30px;
-  border-bottom: 2px solid #f0f0f0;
+  padding: 20px 25px;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
+  border-radius: 12px 12px 0 0;
 }
 
 .database-manager-header h2 {
@@ -36,67 +37,96 @@
   font-size: 24px;
 }
 
+.close-btn {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 32px;
+  cursor: pointer;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background-color 0.3s;
+}
+
+.close-btn:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
 .database-manager-body {
-  padding: 30px;
+  flex: 1;
+  overflow-y: auto;
+  padding: 25px;
 }
 
 .message {
-  padding: 15px;
-  border-radius: 5px;
+  padding: 12px 20px;
+  border-radius: 8px;
   margin-bottom: 20px;
-  font-weight: 500;
+  font-size: 14px;
+  animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+  from {
+    transform: translateY(-10px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }
 
 .message.success {
-  background-color: #d4edda;
+  background: #d4edda;
   color: #155724;
   border: 1px solid #c3e6cb;
 }
 
 .message.error {
-  background-color: #f8d7da;
+  background: #f8d7da;
   color: #721c24;
   border: 1px solid #f5c6cb;
 }
 
 .database-actions {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
   gap: 20px;
   margin-bottom: 30px;
 }
 
 .action-card {
-  background: #f9f9f9;
-  border: 2px solid #e0e0e0;
-  border-radius: 8px;
-  padding: 25px;
+  background: #f8f9fa;
+  border: 2px solid #e9ecef;
+  border-radius: 10px;
+  padding: 20px;
   text-align: center;
   transition: all 0.3s;
 }
 
 .action-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
   border-color: #667eea;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.action-card.danger {
-  border-color: #ffc0c0;
-  background: #fff5f5;
 }
 
 .action-card.danger:hover {
-  border-color: #ff4444;
+  border-color: #dc3545;
 }
 
 .action-card i {
-  font-size: 48px;
+  font-size: 36px;
   color: #667eea;
   margin-bottom: 15px;
 }
 
 .action-card.danger i {
-  color: #ff4444;
+  color: #dc3545;
 }
 
 .action-card h3 {
@@ -106,21 +136,20 @@
 }
 
 .action-card p {
-  color: #666;
+  margin: 0 0 15px 0;
   font-size: 14px;
-  margin-bottom: 20px;
-  line-height: 1.5;
+  color: #666;
+  line-height: 1.4;
 }
 
 .btn {
-  padding: 10px 24px;
+  padding: 10px 20px;
   border: none;
-  border-radius: 5px;
-  font-size: 16px;
-  font-weight: 600;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
   cursor: pointer;
   transition: all 0.3s;
-  display: inline-block;
 }
 
 .btn-primary {
@@ -130,17 +159,18 @@
 
 .btn-primary:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
 }
 
 .btn-danger {
-  background: linear-gradient(135deg, #ff6b6b 0%, #ff4444 100%);
+  background: #dc3545;
   color: white;
 }
 
 .btn-danger:hover {
+  background: #c82333;
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(255, 68, 68, 0.4);
+  box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
 }
 
 .btn:disabled {
@@ -148,41 +178,276 @@
   cursor: not-allowed;
 }
 
-.file-input-label {
-  cursor: pointer;
-}
-
-.database-info {
-  background: #f0f8ff;
-  border-left: 4px solid #667eea;
+/* Kirtan Management Section */
+.kirtan-management-section {
+  background: #f8f9fa;
+  border-radius: 10px;
   padding: 20px;
-  border-radius: 5px;
+  margin-top: 20px;
 }
 
-.database-info h4 {
-  margin: 0 0 10px 0;
-  color: #333;
-  font-size: 16px;
+.kirtan-management-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 2px solid #e9ecef;
 }
 
-.database-info p {
+.kirtan-management-header h3 {
   margin: 0;
-  color: #666;
-  line-height: 1.6;
+  font-size: 20px;
+  color: #333;
 }
 
-/* Responsive design */
+.kirtan-search-input {
+  padding: 8px 16px;
+  border: 2px solid #e0e0e0;
+  border-radius: 20px;
+  width: 300px;
+  font-size: 14px;
+  transition: all 0.3s;
+}
+
+.kirtan-search-input:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.kirtan-list-container {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.kirtan-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.kirtan-item {
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 12px 15px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: all 0.2s;
+}
+
+.kirtan-item:hover {
+  border-color: #667eea;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.kirtan-info {
+  flex: 1;
+  overflow: hidden;
+}
+
+.kirtan-title {
+  font-size: 15px;
+  color: #333;
+  margin-bottom: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.kirtan-meta {
+  font-size: 12px;
+  color: #999;
+}
+
+.kirtan-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-edit,
+.btn-delete {
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.btn-edit {
+  background: #28a745;
+  color: white;
+}
+
+.btn-edit:hover {
+  background: #218838;
+  transform: scale(1.1);
+}
+
+.btn-delete {
+  background: #dc3545;
+  color: white;
+}
+
+.btn-delete:hover {
+  background: #c82333;
+  transform: scale(1.1);
+}
+
+.loading,
+.no-results {
+  padding: 30px;
+  text-align: center;
+  color: #999;
+  font-size: 14px;
+}
+
+/* OTP Modal */
+.otp-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+}
+
+.otp-modal-content {
+  background: white;
+  width: 400px;
+  border-radius: 12px;
+  padding: 25px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+}
+
+.otp-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.otp-modal-header h3 {
+  margin: 0;
+  font-size: 20px;
+  color: #333;
+}
+
+.otp-input-container {
+  margin-bottom: 15px;
+}
+
+.otp-input {
+  width: 100%;
+  padding: 12px;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 18px;
+  text-align: center;
+  letter-spacing: 8px;
+  transition: all 0.3s;
+}
+
+.otp-input:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.otp-error {
+  color: #dc3545;
+  font-size: 14px;
+  margin-bottom: 15px;
+  text-align: center;
+}
+
+.otp-modal-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.btn-cancel,
+.btn-submit {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.btn-cancel {
+  background: #e9ecef;
+  color: #495057;
+}
+
+.btn-cancel:hover {
+  background: #dee2e6;
+}
+
+.btn-submit {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.btn-submit:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+/* Scrollbar */
+.kirtan-list-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.kirtan-list-container::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.kirtan-list-container::-webkit-scrollbar-thumb {
+  background: #bbb;
+  border-radius: 3px;
+}
+
+.kirtan-list-container::-webkit-scrollbar-thumb:hover {
+  background: #888;
+}
+
+/* Responsive */
 @media (max-width: 768px) {
   .database-manager-content {
     width: 95%;
-    max-height: 95vh;
+    height: 90vh;
   }
 
   .database-actions {
     grid-template-columns: 1fr;
   }
 
-  .database-manager-body {
-    padding: 20px;
+  .kirtan-search-input {
+    width: 100%;
+  }
+
+  .kirtan-management-header {
+    flex-direction: column;
+    gap: 15px;
+  }
+
+  .otp-modal-content {
+    width: 90%;
+    max-width: 400px;
   }
 }

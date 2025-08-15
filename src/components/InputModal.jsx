@@ -89,13 +89,25 @@ const InputModal = ({
       e.preventDefault();
       const pastedText = e.clipboardData.getData('text');
       
+      // Get the textarea element
+      const textarea = e.target;
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+      
       // Check if pasted text is Unicode Gujarati
+      let textToInsert = pastedText;
       if (isUnicodeGujarati(pastedText)) {
-        const convertedText = convertUnicodeToSulekh(pastedText);
-        setText(text + convertedText);
-      } else {
-        setText(text + pastedText);
+        textToInsert = convertUnicodeToSulekh(pastedText);
       }
+      
+      // Replace selected text with pasted text
+      const newText = text.substring(0, start) + textToInsert + text.substring(end);
+      setText(newText);
+      
+      // Set cursor position after pasted text
+      setTimeout(() => {
+        textarea.selectionStart = textarea.selectionEnd = start + textToInsert.length;
+      }, 0);
     }
   };
 

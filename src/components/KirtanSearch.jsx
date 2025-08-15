@@ -5,9 +5,8 @@ import '../styles/KirtanSearch.css';
 const KirtanSearch = ({ isOpen, onClose, onSelectKirtan, onEditKirtan }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [allKirtans, setAllKirtans] = useState([]);
-  const [filteredKirtans, setFilteredKirtans] = useState([]);
-  const [matchingLines, setMatchingLines] = useState([]);
-  const [selectedKirtan, setSelectedKirtan] = useState(null);
+  const [firstLineResults, setFirstLineResults] = useState([]);
+  const [contentResults, setContentResults] = useState([]);
   const [loading, setLoading] = useState(true);
 
   // Load all kirtans on mount
@@ -22,7 +21,8 @@ const KirtanSearch = ({ isOpen, onClose, onSelectKirtan, onEditKirtan }) => {
     try {
       const kirtans = await kirtanDB.getAllKirtans();
       setAllKirtans(kirtans);
-      setFilteredKirtans(kirtans);
+      setFirstLineResults(kirtans);
+      setContentResults([]);
     } catch (error) {
       console.error('Failed to load kirtans:', error);
     } finally {
@@ -30,109 +30,66 @@ const KirtanSearch = ({ isOpen, onClose, onSelectKirtan, onEditKirtan }) => {
     }
   };
 
-  // Filter kirtans and find matching lines
+  // Search in all fields and languages
   useEffect(() => {
     if (!searchQuery.trim()) {
-      setFilteredKirtans(allKirtans);
-      setMatchingLines([]);
+      setFirstLineResults(allKirtans);
+      setContentResults([]);
       return;
     }
 
     const query = searchQuery.toLowerCase();
     
-    // Filter kirtans by title
-    const filtered = allKirtans.filter(kirtan => {
+    // Search for first line matches
+    const firstLineMatches = allKirtans.filter(kirtan => {
+      // Get first line from all available content
+      const firstLineSulekh = kirtan.sulekhContent ? kirtan.sulekhContent.split('\n')[0].toLowerCase() : '';
+      const firstLineUnicode = kirtan.unicodeContent ? kirtan.unicodeContent.split('\n')[0].toLowerCase() : '';
+      const firstLineEnglish = kirtan.englishContent ? kirtan.englishContent.split('\n')[0].toLowerCase() : '';
+      
+      // Also check titles as they might be the first line
       const titleMatch = 
         (kirtan.sulekhTitle && kirtan.sulekhTitle.toLowerCase().includes(query)) ||
         (kirtan.unicodeTitle && kirtan.unicodeTitle.toLowerCase().includes(query)) ||
         (kirtan.englishTitle && kirtan.englishTitle.toLowerCase().includes(query));
       
-      return titleMatch;
-    });
-    
-    setFilteredKirtans(filtered);
-    
-    // Find matching lines in all kirtans
-    const lines = [];
-    allKirtans.forEach(kirtan => {
-      // Search in Sulekh content
-      if (kirtan.sulekhContent) {
-        const contentLines = kirtan.sulekhContent.split('\n');
-        contentLines.forEach((line, index) => {
-          if (line.toLowerCase().includes(query)) {
-            lines.push({
-              kirtanId: kirtan.id,
-              kirtanTitle: kirtan.sulekhTitle || kirtan.unicodeTitle || kirtan.englishTitle,
-              line: line,
-              lineNumber: index + 1,
-              type: 'sulekh'
-            });
-          }
-        });
-      }
+      // Check if query matches first line in any language
+      const firstLineMatch = 
+        firstLineSulekh.includes(query) ||
+        firstLineUnicode.includes(query) ||
+        firstLineEnglish.includes(query) ||
+        titleMatch;
       
-      // Search in Unicode content
-      if (kirtan.unicodeContent) {
-        const contentLines = kirtan.unicodeContent.split('\n');
-        contentLines.forEach((line, index) => {
-          if (line.toLowerCase().includes(query)) {
-            // Avoid duplicates if already found in Sulekh
-            const isDuplicate = lines.some(l => 
-              l.kirtanId === kirtan.id && l.lineNumber === index + 1
-            );
-            if (!isDuplicate) {
-              lines.push({
-                kirtanId: kirtan.id,
-                kirtanTitle: kirtan.unicodeTitle || kirtan.sulekhTitle || kirtan.englishTitle,
-                line: line,
-                lineNumber: index + 1,
-                type: 'unicode'
-              });
-            }
-          }
-        });
-      }
+      return firstLineMatch;
     });
     
-    setMatchingLines(lines);
+    // Search for content matches (anywhere in the text)
+    const contentMatches = allKirtans.filter(kirtan => {
+      // Search in all content (all languages)
+      const fullContentMatch = 
+        (kirtan.sulekhContent && kirtan.sulekhContent.toLowerCase().includes(query)) ||
+        (kirtan.unicodeContent && kirtan.unicodeContent.toLowerCase().includes(query)) ||
+        (kirtan.englishContent && kirtan.englishContent.toLowerCase().includes(query));
+      
+      return fullContentMatch;
+    });
+    
+    setFirstLineResults(firstLineMatches);
+    setContentResults(contentMatches);
   }, [searchQuery, allKirtans]);
 
   const handleKirtanClick = (kirtan) => {
-    setSelectedKirtan(kirtan);
-  };
-
-  const handleKirtanDoubleClick = (kirtan) => {
-    onEditKirtan(kirtan);
-  };
-
-  const handleOpenKirtan = (kirtan) => {
     onSelectKirtan(kirtan);
     onClose();
   };
 
-  const handleLineClick = (line) => {
-    const kirtan = allKirtans.find(k => k.id === line.kirtanId);
-    if (kirtan) {
-      setSelectedKirtan(kirtan);
-      // Optionally scroll to the specific line
-    }
-  };
-
   const getFirstLine = (kirtan) => {
+    // Always show Sulekh first line if available
     if (kirtan.sulekhContent) {
       const firstLine = kirtan.sulekhContent.split('\n')[0];
-      return firstLine || kirtan.sulekhTitle || 'No content';
+      return firstLine || kirtan.sulekhTitle || '';
     }
-    return kirtan.sulekhTitle || kirtan.unicodeTitle || kirtan.englishTitle || 'Untitled';
-  };
-
-  const getFontFamily = (type) => {
-    if (type === 'sulekh') {
-      return "'Guj_Regular_Bold_Sulekh', sans-serif";
-    } else if (type === 'unicode') {
-      return "'Noto Sans Gujarati', 'Shruti', sans-serif";
-    }
-    return "'Arial', sans-serif";
+    return kirtan.sulekhTitle || kirtan.unicodeTitle || kirtan.englishTitle || '';
   };
 
   const highlightMatch = (text, query) => {
@@ -141,7 +98,7 @@ const KirtanSearch = ({ isOpen, onClose, onSelectKirtan, onEditKirtan }) => {
     const parts = text.split(new RegExp(`(${query})`, 'gi'));
     return parts.map((part, index) => 
       part.toLowerCase() === query.toLowerCase() ? 
-        <mark key={index}>{part}</mark> : part
+        <mark key={index} style={{ backgroundColor: '#ffeb3b', padding: '0 2px' }}>{part}</mark> : part
     );
   };
 
@@ -151,58 +108,39 @@ const KirtanSearch = ({ isOpen, onClose, onSelectKirtan, onEditKirtan }) => {
     <div className="kirtan-search-modal">
       <div className="kirtan-search-container">
         <div className="kirtan-search-header">
-          <h2>Kirtan Database</h2>
-          <div className="search-controls">
-            <input
-              type="text"
-              className="kirtan-search-input"
-              placeholder="Search kirtans..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              autoFocus
-            />
-            <button className="close-search-btn" onClick={onClose}>×</button>
-          </div>
+          <h2>Search Kirtan</h2>
+          <input
+            type="text"
+            className="kirtan-search-input"
+            placeholder="Search in any language (Sulekh, Unicode, English, Hindi)..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            autoFocus
+          />
+          <button className="close-search-btn" onClick={onClose}>×</button>
         </div>
 
         <div className="kirtan-search-body">
-          {/* Left Panel - Kirtan List */}
-          <div className="kirtan-list-panel">
+          {/* Left Panel - First Line Search Results */}
+          <div className="search-panel">
             <div className="panel-header">
-              <h3>Kirtans ({filteredKirtans.length})</h3>
+              <h3>First Line Matches ({firstLineResults.length})</h3>
             </div>
             <div className="kirtan-list">
               {loading ? (
                 <div className="loading">Loading kirtans...</div>
-              ) : filteredKirtans.length === 0 ? (
-                <div className="no-results">No kirtans found</div>
+              ) : firstLineResults.length === 0 ? (
+                <div className="no-results">No first line matches found</div>
               ) : (
-                filteredKirtans.map(kirtan => (
+                firstLineResults.map(kirtan => (
                   <div
-                    key={kirtan.id}
-                    className={`kirtan-item ${selectedKirtan?.id === kirtan.id ? 'selected' : ''}`}
+                    key={`first-${kirtan.id}`}
+                    className="kirtan-item"
                     onClick={() => handleKirtanClick(kirtan)}
-                    onDoubleClick={() => handleKirtanDoubleClick(kirtan)}
+                    title="Click to open"
                   >
-                    <div className="kirtan-title" style={{ fontFamily: getFontFamily('sulekh') }}>
-                      {highlightMatch(kirtan.sulekhTitle || kirtan.unicodeTitle || kirtan.englishTitle, searchQuery)}
-                    </div>
-                    <div className="kirtan-first-line" style={{ fontFamily: getFontFamily('sulekh') }}>
-                      {getFirstLine(kirtan)}
-                    </div>
-                    <div className="kirtan-meta">
-                      <span className="kirtan-date">
-                        {new Date(kirtan.createdAt).toLocaleDateString()}
-                      </span>
-                      <button 
-                        className="open-kirtan-btn"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleOpenKirtan(kirtan);
-                        }}
-                      >
-                        Open
-                      </button>
+                    <div className="kirtan-first-line" style={{ fontFamily: "'Guj_Regular_Bold_Sulekh', sans-serif" }}>
+                      {highlightMatch(getFirstLine(kirtan), searchQuery)}
                     </div>
                   </div>
                 ))
@@ -210,31 +148,26 @@ const KirtanSearch = ({ isOpen, onClose, onSelectKirtan, onEditKirtan }) => {
             </div>
           </div>
 
-          {/* Right Panel - Matching Lines */}
-          <div className="matching-lines-panel">
+          {/* Right Panel - Content Search Results */}
+          <div className="search-panel">
             <div className="panel-header">
-              <h3>Matching Lines ({matchingLines.length})</h3>
+              <h3>Content Matches ({contentResults.length})</h3>
             </div>
-            <div className="matching-lines-list">
-              {matchingLines.length === 0 ? (
+            <div className="kirtan-list">
+              {contentResults.length === 0 ? (
                 <div className="no-results">
-                  {searchQuery ? 'No matching lines found' : 'Enter a search term to find matching lines'}
+                  {searchQuery ? 'No content matches found' : 'Enter text to search in content'}
                 </div>
               ) : (
-                matchingLines.map((line, index) => (
+                contentResults.map(kirtan => (
                   <div
-                    key={`${line.kirtanId}-${line.lineNumber}-${index}`}
-                    className="matching-line-item"
-                    onClick={() => handleLineClick(line)}
+                    key={`content-${kirtan.id}`}
+                    className="kirtan-item"
+                    onClick={() => handleKirtanClick(kirtan)}
+                    title="Click to open"
                   >
-                    <div className="line-kirtan-title">
-                      {line.kirtanTitle} - Line {line.lineNumber}
-                    </div>
-                    <div 
-                      className="line-content"
-                      style={{ fontFamily: getFontFamily(line.type) }}
-                    >
-                      {highlightMatch(line.line, searchQuery)}
+                    <div className="kirtan-first-line" style={{ fontFamily: "'Guj_Regular_Bold_Sulekh', sans-serif" }}>
+                      {getFirstLine(kirtan)}
                     </div>
                   </div>
                 ))
@@ -242,26 +175,6 @@ const KirtanSearch = ({ isOpen, onClose, onSelectKirtan, onEditKirtan }) => {
             </div>
           </div>
         </div>
-
-        {/* Selected Kirtan Preview */}
-        {selectedKirtan && (
-          <div className="kirtan-preview">
-            <div className="preview-header">
-              <h4>{selectedKirtan.sulekhTitle || selectedKirtan.unicodeTitle || 'Untitled'}</h4>
-              <div className="preview-actions">
-                <button onClick={() => handleKirtanDoubleClick(selectedKirtan)}>
-                  <i className="fas fa-edit"></i> Edit
-                </button>
-                <button onClick={() => handleOpenKirtan(selectedKirtan)}>
-                  <i className="fas fa-external-link-alt"></i> Open
-                </button>
-              </div>
-            </div>
-            <div className="preview-content" style={{ fontFamily: getFontFamily('sulekh') }}>
-              {selectedKirtan.sulekhContent || 'No content'}
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );
