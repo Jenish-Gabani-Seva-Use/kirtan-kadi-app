@@ -107,7 +107,7 @@ const Login = ({ onLogin }) => {
         </form>
         
         <div className="login-footer">
-          <p>Contact admin at +91 7778932326 for access</p>
+          <p>Contact at +91 7778932326 for access</p>
         </div>
       </div>
     </div>
