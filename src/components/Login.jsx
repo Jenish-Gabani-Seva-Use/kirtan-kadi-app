@@ -16,7 +16,8 @@ const Login = ({ onLogin }) => {
     const users = {
       'admin': 'adminjenish', // Stronger default password
       'murtibaugsurat': 'Murtibaug#19$30%',
-      'bhajanbaugsurat': 'Bhajanbaug#96012%'
+      'bhajanbaugsurat': 'Bhajanbaug#96012%',
+'jayswaminarayan': 'Hari@96012%'
     };
     return users[username] === password;
   };
