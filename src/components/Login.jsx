@@ -15,7 +15,8 @@ const Login = ({ onLogin }) => {
   const validateUser = (username, password) => {
     const users = {
       'admin': 'adminjenish', // Stronger default password
-      'murtibaugsurat@gmail.com': 'Murtibaug#19$30%',
+      'murtibaugsurat': 'Murtibaug#19$30%',
+      'bhajanbagsurat': 'Bhajanbag#96012%'
     };
     return users[username] === password;
   };
